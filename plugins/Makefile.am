@@ -759,6 +759,52 @@ libmm_plugin_via_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_via_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 
 ################################################################################
+# plugin: Infineon
+################################################################################
+
+PLUGIN_INFINEON_COMPILER_FLAGS = \
+	-I$(top_srcdir)/plugins/infineon \
+	-I$(top_builddir)/plugins/infineon \
+	$(NULL)
+
+noinst_LTLIBRARIES += libhelpers-infineon.la
+
+libhelpers_infineon_la_SOURCES = \
+	infineon/mm-modem-helpers-infineon.c \
+	infineon/mm-modem-helpers-infineon.h \
+	$(NULL)
+
+libhelpers_infineon_la_CPPFLAGS = $(PLUGIN_INFINEON_COMPILER_FLAGS)
+
+dist_udevrules_DATA += infineon/77-mm-infineon-port-types.rules
+
+noinst_PROGRAMS += test-modem-helpers-infineon
+test_modem_helpers_infineon_CPPFLAGS = $(PLUGIN_INFINEON_COMPILER_FLAGS)
+test_modem_helpers_infineon_SOURCES = \
+	infineon/tests/test-modem-helpers-infineon.c \
+	$(NULL)
+
+test_modem_helpers_infineon_LDADD = \
+	$(builddir)/libhelpers-infineon.la \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
+pkglib_LTLIBRARIES += libmm-plugin-infineon.la
+libmm_plugin_infineon_la_SOURCES = \
+	infineon/mm-plugin-infineon.c \
+	infineon/mm-plugin-infineon.h \
+	infineon/mm-broadband-modem-infineon.c \
+	infineon/mm-broadband-modem-infineon.h \
+	infineon/mm-broadband-bearer-infineon.c \
+	infineon/mm-broadband-bearer-infineon.h \
+	$(NULL)
+
+libmm_plugin_infineon_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(PLUGIN_INFINEON_COMPILER_FLAGS)
+libmm_plugin_infineon_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
+libmm_plugin_infineon_la_LIBADD   = $(builddir)/libhelpers-infineon.la
+
+################################################################################
 # plugin: telit
 ################################################################################
 
