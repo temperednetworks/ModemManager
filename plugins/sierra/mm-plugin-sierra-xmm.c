@@ -23,7 +23,7 @@
 #include "mm-log.h"
 #include "mm-plugin-sierra-xmm.h"
 #include "mm-broadband-modem.h"
-#include "mm-broadband-modem-xmm.h"
+#include "mm-broadband-modem-sierra-xmm.h"
 #include "mm-broadband-modem-mbim-xmm.h"
 
 
@@ -59,11 +59,11 @@ create_modem (MMPlugin *self,
         }
     #endif
         mm_dbg ("XMM-based Sierra modem found...");
-        return MM_BASE_MODEM (mm_broadband_modem_xmm_new   (uid,
-                                                            drivers,
-                                                            mm_plugin_get_name (self),
-                                                            vendor,
-                                                            product));
+        return MM_BASE_MODEM (mm_broadband_modem_sierra_xmm_new    (uid,
+                                                                    drivers,
+                                                                    mm_plugin_get_name (self),
+                                                                    vendor,
+                                                                    product));
     }
 
 
