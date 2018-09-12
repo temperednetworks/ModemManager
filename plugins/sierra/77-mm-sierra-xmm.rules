@@ -9,9 +9,9 @@ SUBSYSTEMS=="usb", ATTRS{bInterfaceNumber}=="?*", ENV{.MM_USBIFNUM}="$attr{bInte
 
 # Sierra HL758x
 ATTRS{idVendor}=="1519", ATTRS{idProduct}=="0443", ENV{.MM_USBIFNUM}=="06", ENV{ID_MM_XMM_NCM_ID}="0"
-ATTRS{idVendor}=="1519", ATTRS{idProduct}=="0443", ENV{.MM_USBIFNUM}=="08", ENV{ID_MM_XMM_NCM_ID}="1"
-ATTRS{idVendor}=="1519", ATTRS{idProduct}=="0443", ENV{.MM_USBIFNUM}=="0a", ENV{ID_MM_XMM_NCM_ID}="2"
-ATTRS{idVendor}=="1519", ATTRS{idProduct}=="0443", ENV{.MM_USBIFNUM}=="0c", ENV{ID_MM_XMM_NCM_ID}="3"
+ATTRS{idVendor}=="1519", ATTRS{idProduct}=="0443", ENV{.MM_USBIFNUM}=="08", ENV{ID_MM_DEVICE_IGNORE}="1"
+ATTRS{idVendor}=="1519", ATTRS{idProduct}=="0443", ENV{.MM_USBIFNUM}=="0a", ENV{ID_MM_DEVICE_IGNORE}="1"
+ATTRS{idVendor}=="1519", ATTRS{idProduct}=="0443", ENV{.MM_USBIFNUM}=="0c", ENV{ID_MM_DEVICE_IGNORE}="1"
 ATTRS{idVendor}=="1519", ATTRS{idProduct}=="0443", ENV{.MM_USBIFNUM}=="00", ENV{ID_MM_XMM_ACM_ID}="0"
 # Ignore intel trace ACM port
 ATTRS{idVendor}=="1519", ATTRS{idProduct}=="0443", ENV{.MM_USBIFNUM}=="02", ENV{ID_MM_DEVICE_IGNORE}="1"
