@@ -439,6 +439,8 @@ libmm_plugin_sierra_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 # plugin: sierra xmm (XMM based modems)
 ################################################################################
 
+dist_udevrules_DATA += sierra/77-mm-sierra-xmm.rules
+
 pkglib_LTLIBRARIES += libmm-plugin-sierra-xmm.la
 libmm_plugin_sierra_xmm_la_SOURCES = \
 	sierra/mm-plugin-sierra-xmm.c \
