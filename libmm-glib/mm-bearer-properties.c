@@ -34,6 +34,7 @@
 G_DEFINE_TYPE (MMBearerProperties, mm_bearer_properties, G_TYPE_OBJECT);
 
 #define PROPERTY_APN             "apn"
+#define PROPERTY_PDP_CID         "pdp-cid"
 #define PROPERTY_ALLOWED_AUTH    "allowed-auth"
 #define PROPERTY_USER            "user"
 #define PROPERTY_PASSWORD        "password"
@@ -45,6 +46,8 @@ G_DEFINE_TYPE (MMBearerProperties, mm_bearer_properties, G_TYPE_OBJECT);
 struct _MMBearerPropertiesPrivate {
     /* APN */
     gchar *apn;
+    /* PDP CID */
+    guint pdp_cid;
     /* IP type */
     MMBearerIpFamily ip_type;
     /* Allowed auth */
@@ -95,6 +98,40 @@ mm_bearer_properties_get_apn (MMBearerProperties *self)
     g_return_val_if_fail (MM_IS_BEARER_PROPERTIES (self), NULL);
 
     return self->priv->apn;
+}
+
+/*****************************************************************************/
+
+/**
+ * mm_bearer_properties_set_pdp_cid:
+ * @self: a #MMBearerProperties.
+ * @pdp_cid: PDP context ID.
+ *
+ * Sets the PDP context ID to use in the connection attempt.
+ */
+void
+mm_bearer_properties_set_pdp_cid (MMBearerProperties *self,
+                                  guint               pdp_cid)
+{
+    g_return_if_fail (MM_IS_BEARER_PROPERTIES (self));
+
+    self->priv->pdp_cid = pdp_cid;
+}
+
+/**
+ * mm_bearer_properties_get_pdp_cid:
+ * @self: a #MMBearerProperties.
+ *
+ * Gets the PDP context ID to use in the connection attempt.
+ *
+ * Returns: the context number, or 0 if not set.
+ */
+guint
+mm_bearer_properties_get_pdp_cid (MMBearerProperties *self)
+{
+    g_return_val_if_fail (MM_IS_BEARER_PROPERTIES (self), 0);
+
+    return self->priv->pdp_cid;
 }
 
 /*****************************************************************************/
@@ -361,6 +398,12 @@ mm_bearer_properties_get_dictionary (MMBearerProperties *self)
                                PROPERTY_APN,
                                g_variant_new_string (self->priv->apn));
 
+    if (self->priv->pdp_cid)
+        g_variant_builder_add (&builder,
+                               "{sv}",
+                               PROPERTY_PDP_CID,
+                               g_variant_new_uint32 (self->priv->pdp_cid));
+
     if (self->priv->allowed_auth != MM_BEARER_ALLOWED_AUTH_UNKNOWN)
         g_variant_builder_add (&builder,
                                "{sv}",
@@ -428,7 +471,16 @@ mm_bearer_properties_consume_string (MMBearerProperties *self,
 
     if (g_str_equal (key, PROPERTY_APN))
         mm_bearer_properties_set_apn (self, value);
-    else if (g_str_equal (key, PROPERTY_ALLOWED_AUTH)) {
+    else if (g_str_equal (key, PROPERTY_PDP_CID)) {
+        guint aux;
+
+        if (!mm_get_uint_from_str (value, &aux)) {
+            g_set_error (error, MM_CORE_ERROR, MM_CORE_ERROR_FAILED,
+                         "Invalid PDP CID given: %s", value);
+            return FALSE;
+        }
+        mm_bearer_properties_set_pdp_cid (self, aux);
+    }else if (g_str_equal (key, PROPERTY_ALLOWED_AUTH)) {
         GError *inner_error = NULL;
         MMBearerAllowedAuth allowed_auth;
 
@@ -548,6 +600,10 @@ mm_bearer_properties_consume_variant (MMBearerProperties *properties,
         mm_bearer_properties_set_apn (
             properties,
             g_variant_get_string (value, NULL));
+    else if (g_str_equal (key, PROPERTY_PDP_CID))
+        mm_bearer_properties_set_pdp_cid (
+            properties,
+            g_variant_get_uint32 (value));
     else if (g_str_equal (key, PROPERTY_ALLOWED_AUTH))
         mm_bearer_properties_set_allowed_auth (
             properties,
@@ -664,6 +720,7 @@ mm_bearer_properties_cmp (MMBearerProperties *a,
                           MMBearerProperties *b)
 {
     return ((!g_strcmp0 (a->priv->apn, b->priv->apn)) &&
+            (a->priv->pdp_cid == b->priv->pdp_cid) &&
             (a->priv->ip_type == b->priv->ip_type) &&
             (!g_strcmp0 (a->priv->number, b->priv->number)) &&
             (a->priv->allowed_auth == b->priv->allowed_auth) &&

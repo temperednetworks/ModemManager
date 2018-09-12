@@ -648,9 +648,10 @@ connect_auth_ready (MMBaseModem *self,
 
     /* Log about all the parameters being used for the simple connect */
     {
-        MMBearerAllowedAuth allowed_auth;
-        gchar *str;
-        MMBearerIpFamily ip_family;
+        MMBearerAllowedAuth  allowed_auth;
+        gchar               *str;
+        MMBearerIpFamily     ip_family;
+        guint                aux_uint;
 
 #define VALIDATE_UNSPECIFIED(str) (str ? str : "unspecified")
 
@@ -661,6 +662,12 @@ connect_auth_ready (MMBaseModem *self,
         mm_dbg ("   Allowed roaming: %s", mm_simple_connect_properties_get_allow_roaming (ctx->properties) ? "yes" : "no");
 
         mm_dbg ("   APN: %s", VALIDATE_UNSPECIFIED (mm_simple_connect_properties_get_apn (ctx->properties)));
+
+        aux_uint = mm_simple_connect_properties_get_pdp_cid (ctx->properties);
+        if (aux_uint)
+            mm_dbg ("   PDP CID: %u", aux_uint);
+        else
+            mm_dbg ("   PDP CID: unspecified");
 
         ip_family = mm_simple_connect_properties_get_ip_type (ctx->properties);
         if (ip_family != MM_BEARER_IP_FAMILY_NONE) {

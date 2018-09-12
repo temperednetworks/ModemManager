@@ -153,6 +153,40 @@ mm_simple_connect_properties_get_apn (MMSimpleConnectProperties *self)
 /*****************************************************************************/
 
 /**
+ * mm_simple_connect_properties_set_pdp_cid:
+ * @self: a #MMSimpleConnectProperties.
+ * @pdp_cid: PDP context ID.
+ *
+ * Sets the PDP context ID to use in the connection attempt.
+ */
+void
+mm_simple_connect_properties_set_pdp_cid (MMSimpleConnectProperties *self,
+                                          guint                      pdp_cid)
+{
+    g_return_if_fail (MM_IS_SIMPLE_CONNECT_PROPERTIES (self));
+
+    mm_bearer_properties_set_pdp_cid (self->priv->bearer_properties, pdp_cid);
+}
+
+/**
+ * mm_simple_connect_properties_get_pdp_cid:
+ * @self: a #MMSimpleConnectProperties.
+ *
+ * Gets the PDP context ID to use in the connection attempt.
+ *
+ * Returns: the context number, or 0 if not set.
+ */
+guint
+mm_simple_connect_properties_get_pdp_cid (MMSimpleConnectProperties *self)
+{
+    g_return_val_if_fail (MM_IS_SIMPLE_CONNECT_PROPERTIES (self), 0);
+
+    return mm_bearer_properties_get_pdp_cid (self->priv->bearer_properties);
+}
+
+/*****************************************************************************/
+
+/**
  * mm_simple_connect_properties_set_allowed_auth:
  * @self: a #MMSimpleConnectProperties.
  * @allowed_auth: a bitmask of #MMBearerAllowedAuth values. %MM_BEARER_ALLOWED_AUTH_UNKNOWN may be given to request the modem-default method.

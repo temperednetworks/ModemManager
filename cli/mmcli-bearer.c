@@ -163,11 +163,18 @@ print_bearer_info (MMBearer *bearer)
 
     if (properties) {
         gchar *ip_family_str;
+        gchar *pdp_cid_str = NULL;
+        guint  pdp_cid;
 
         ip_family_str = (mm_bearer_ip_family_build_string_from_mask (
                              mm_bearer_properties_get_ip_type (properties)));
+
+        if ((pdp_cid = mm_bearer_properties_get_pdp_cid (properties)) != 0)
+            pdp_cid_str = g_strdup_printf ("%u", pdp_cid);
+
         g_print ("  -------------------------\n"
                  "  Properties         |         apn: '%s'\n"
+                 "                     |     PDP CID: '%s'\n"
                  "                     |     roaming: '%s'\n"
                  "                     |     IP type: '%s'\n"
                  "                     |        user: '%s'\n"
@@ -175,6 +182,7 @@ print_bearer_info (MMBearer *bearer)
                  "                     |      number: '%s'\n"
                  "                     | Rm protocol: '%s'\n",
                  VALIDATE_NONE (mm_bearer_properties_get_apn (properties)),
+                 VALIDATE_NONE (pdp_cid_str),
                  mm_bearer_properties_get_allow_roaming (properties) ? "allowed" : "forbidden",
                  VALIDATE_UNKNOWN (ip_family_str),
                  VALIDATE_NONE (mm_bearer_properties_get_user (properties)),
@@ -183,6 +191,7 @@ print_bearer_info (MMBearer *bearer)
                  VALIDATE_UNKNOWN (mm_modem_cdma_rm_protocol_get_string (
                                        mm_bearer_properties_get_rm_protocol (properties))));
         g_free (ip_family_str);
+        g_free (pdp_cid_str);
     }
 
     /* IPv4 */

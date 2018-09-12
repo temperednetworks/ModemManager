@@ -61,6 +61,8 @@
         <variablelist>
         <varlistentry><term><literal>"apn"</literal></term>
           <listitem><para>Access Point Name, given as a string value (signature <literal>"s"</literal>). Required in 3GPP.</para></listitem></varlistentry>
+        <varlistentry><term><literal>"pdp-cid"</literal></term>
+          <listitem><para>PDP context identifier, given as an unsigned 32-bit integer value (signature <literal>"u"</literal>). Optional in 3GPP.</para></listitem></varlistentry>
         <varlistentry><term><literal>"ip-type"</literal></term>
           <listitem><para>Addressing type, given as a <link linkend="MMBearerIpFamily">MMBearerIpFamily</link> value (signature <literal>"u"</literal>). Optional in 3GPP and CDMA.</para></listitem></varlistentry>
         <varlistentry><term><literal>"allowed-auth"</literal></term>

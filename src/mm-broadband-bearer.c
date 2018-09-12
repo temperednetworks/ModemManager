@@ -667,25 +667,17 @@ initialize_pdp_context_ready (MMBaseModem  *modem,
 }
 
 static void
-find_cid_ready (MMBaseModem  *modem,
-                GAsyncResult *res,
-                GTask        *task)
+initialize_pdp_context (GTask *task)
 {
     gchar                   *apn;
     gchar                   *command;
-    GError                  *error = NULL;
     const gchar             *pdp_type;
     CidSelection3gppContext *ctx;
 
     ctx = (CidSelection3gppContext *) g_task_get_task_data (task);
 
-    mm_base_modem_at_sequence_full_finish (modem, res, NULL, &error);
-    if (error) {
-        mm_warn ("Couldn't find best CID to use: '%s'", error->message);
-        g_task_return_error (task, error);
-        g_object_unref (task);
-        return;
-    }
+    /* If no error reported, we must have a valid CID to be used */
+    g_assert (ctx->cid != 0);
 
     /* Validate requested PDP type */
     pdp_type = mm_3gpp_get_pdp_type_from_ip_family (ctx->ip_family);
@@ -700,9 +692,6 @@ find_cid_ready (MMBaseModem  *modem,
         g_free (str);
         return;
     }
-
-    /* If no error reported, we must have a valid CID to be used */
-    g_assert (ctx->cid != 0);
 
     /* If there's already a PDP context defined, just use it */
     if (ctx->use_existing_cid) {
@@ -725,6 +714,24 @@ find_cid_ready (MMBaseModem  *modem,
                                    (GAsyncReadyCallback) initialize_pdp_context_ready,
                                    task);
     g_free (command);
+}
+
+static void
+find_cid_ready (MMBaseModem  *modem,
+                GAsyncResult *res,
+                GTask        *task)
+{
+    GError *error = NULL;
+
+    mm_base_modem_at_sequence_full_finish (modem, res, NULL, &error);
+    if (error) {
+        mm_warn ("Couldn't find best CID to use: '%s'", error->message);
+        g_task_return_error (task, error);
+        g_object_unref (task);
+        return;
+    }
+
+    initialize_pdp_context (task);
 }
 
 static gboolean
@@ -933,6 +940,12 @@ cid_selection_3gpp (MMBroadbandBearer   *self,
 
     task = g_task_new (self, cancellable, callback, user_data);
     g_task_set_task_data (task, ctx, (GDestroyNotify) cid_selection_3gpp_context_free);
+
+    if ((ctx->cid = mm_bearer_properties_get_pdp_cid (mm_base_bearer_peek_config (MM_BASE_BEARER (ctx->self)))) != 0) {
+        mm_dbg ("Explicit CID requested by the user: %u", ctx->cid);
+        initialize_pdp_context (task);
+        return;
+    }
 
     mm_dbg ("Looking for best CID...");
     mm_base_modem_at_sequence_full (ctx->modem,
