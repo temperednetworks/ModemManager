@@ -5,8 +5,12 @@ SUBSYSTEMS=="usb", ATTRS{idVendor}=="1199", GOTO="mm_sierra"
 GOTO="mm_sierra_end"
 
 LABEL="mm_sierra"
+SUBSYSTEMS=="usb", ATTRS{bInterfaceNumber}=="?*", ENV{.MM_USBIFNUM}="$attr{bInterfaceNumber}"
 
 # Netgear AC341U: enable connection status polling explicitly
 ATTRS{idVendor}=="1199", ATTRS{idProduct}=="9057", ENV{ID_MM_QMI_CONNECTION_STATUS_POLLING_ENABLE}="1"
+
+# MC74XX: Ignore "wwan0" net interface
+ATTRS{idVendor}=="1199", ATTRS{idProduct}=="9071", ENV{.MM_USBIFNUM}=="08", ENV{ID_MM_DEVICE_IGNORE}="1"
 
 LABEL="mm_sierra_end"
