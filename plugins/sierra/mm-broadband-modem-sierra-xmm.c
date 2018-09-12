@@ -25,6 +25,7 @@
 #include "mm-log.h"
 #include "mm-iface-modem.h"
 #include "mm-broadband-modem-sierra-xmm.h"
+#include "mm-broadband-bearer-sierra-xmm.h"
 #include "mm-shared-xmm.h"
 
 static void iface_modem_init (MMIfaceModem *iface);
@@ -35,6 +36,61 @@ G_DEFINE_TYPE_EXTENDED (MMBroadbandModemSierraXmm, mm_broadband_modem_sierra_xmm
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_SIGNAL, iface_modem_signal_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_SHARED_XMM,  shared_xmm_init))
+
+/*****************************************************************************/
+/* Create Bearer (Modem interface) */
+
+static MMBaseBearer *
+modem_create_bearer_finish (MMIfaceModem *self,
+                            GAsyncResult *res,
+                            GError **error)
+{
+    MMBaseBearer *bearer;
+
+    bearer = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (res));
+    mm_dbg ("New Sierra XMM bearer created at DBus path '%s'", mm_base_bearer_get_path (bearer));
+
+    return g_object_ref (bearer);
+}
+
+static void
+broadband_bearer_sierra_xmm_new_ready  (GObject *source,
+                                        GAsyncResult *res,
+                                        GSimpleAsyncResult *simple)
+{
+    MMBaseBearer *bearer = NULL;
+    GError *error = NULL;
+
+    bearer = mm_broadband_bearer_sierra_xmm_new_finish (res, &error);
+    if (!bearer)
+        g_simple_async_result_take_error (simple, error);
+    else
+        g_simple_async_result_set_op_res_gpointer (simple,
+                                                   bearer,
+                                                   (GDestroyNotify)g_object_unref);
+    g_simple_async_result_complete (simple);
+    g_object_unref (simple);
+}
+
+static void
+modem_create_bearer (MMIfaceModem *self,
+                     MMBearerProperties *properties,
+                     GAsyncReadyCallback callback,
+                     gpointer user_data)
+{
+    GSimpleAsyncResult *result;
+
+    result = g_simple_async_result_new (G_OBJECT (self),
+                                        callback,
+                                        user_data,
+                                        modem_create_bearer);
+
+    mm_broadband_bearer_sierra_xmm_new (MM_BROADBAND_MODEM_SIERRA_XMM (self),
+                                        properties,
+                                        NULL, /* cancellable */
+                                        (GAsyncReadyCallback)broadband_bearer_sierra_xmm_new_ready,
+                                        result);
+}
 
 /*****************************************************************************/
 
@@ -62,6 +118,9 @@ mm_broadband_modem_sierra_xmm_init (MMBroadbandModemSierraXmm *self)
 static void
 iface_modem_init (MMIfaceModem *iface)
 {
+    iface->create_bearer            = modem_create_bearer;
+    iface->create_bearer_finish     = modem_create_bearer_finish;
+
     iface->load_supported_modes        = mm_shared_xmm_load_supported_modes;
     iface->load_supported_modes_finish = mm_shared_xmm_load_supported_modes_finish;
     iface->load_current_modes          = mm_shared_xmm_load_current_modes;
