@@ -540,6 +540,8 @@ libmm_plugin_sierra_xmm_la_SOURCES = \
 	sierra/mm-plugin-sierra-xmm.h \
 	sierra/mm-broadband-modem-sierra-xmm.c \
 	sierra/mm-broadband-modem-sierra-xmm.h \
+	sierra/mm-broadband-bearer-sierra-xmm.c \
+	sierra/mm-broadband-bearer-sierra-xmm.h \
 	$(NULL)
 libmm_plugin_sierra_xmm_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(XMM_COMMON_COMPILER_FLAGS)
 libmm_plugin_sierra_xmm_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
