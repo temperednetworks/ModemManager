@@ -44,20 +44,7 @@ create_modem (MMPlugin *self,
               GList *probes,
               GError **error)
 {
-
-
-
     if (mm_port_probe_list_is_xmm (probes)) {
-    #if defined WITH_MBIM
-        if (mm_port_probe_list_has_mbim_port (probes)) {
-            mm_dbg ("MBIM-powered XMM-based Sierra modem found...");
-            return MM_BASE_MODEM (mm_broadband_modem_mbim_xmm_new (uid,
-                                                                   drivers,
-                                                                   mm_plugin_get_name (self),
-                                                                   vendor,
-                                                                   product));
-        }
-    #endif
         mm_dbg ("XMM-based Sierra modem found...");
         return MM_BASE_MODEM (mm_broadband_modem_sierra_xmm_new    (uid,
                                                                     drivers,
@@ -81,8 +68,8 @@ G_MODULE_EXPORT MMPlugin *
 mm_plugin_create (void)
 {
     static const gchar *subsystems[] = { "tty", "net", "usb", NULL };
-    static const guint16 vendor_ids[] = { 0x1519, 0x8087, 0 };
-    static const gchar *drivers[] = { "cdc_acm", "cdc_ncm", "cdc_mbim", NULL };
+    static const guint16 vendor_ids[] = { 0x1519, 0 };
+    static const gchar *drivers[] = { "cdc_acm", "cdc_ncm", NULL };
 
     return MM_PLUGIN (
         g_object_new (MM_TYPE_PLUGIN_SIERRA_XMM,
@@ -91,7 +78,7 @@ mm_plugin_create (void)
                       MM_PLUGIN_ALLOWED_VENDOR_IDS, vendor_ids,
                       MM_PLUGIN_ALLOWED_DRIVERS,    drivers,
                       MM_PLUGIN_ALLOWED_AT,         TRUE,
-                      MM_PLUGIN_ALLOWED_MBIM,       TRUE,
+                      MM_PLUGIN_ALLOWED_MBIM,       FALSE,
                       MM_PLUGIN_XMM_PROBE,          TRUE,
                       NULL));
 }
