@@ -392,7 +392,7 @@ libmm_plugin_option_hso_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 libmm_plugin_option_hso_la_LIBADD   = $(OPTION_COMMON_LIBADD_FLAGS)
 
 ################################################################################
-# plugin: sierra (new QMI or MBIM modems)
+# plugin: sierra (Qualcomm based QMI or MBIM modems)
 ################################################################################
 
 dist_udevrules_DATA += sierra/77-mm-sierra.rules
@@ -404,6 +404,19 @@ libmm_plugin_sierra_la_SOURCES = \
 	$(NULL)
 libmm_plugin_sierra_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_sierra_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
+
+################################################################################
+# plugin: sierra xmm (XMM based modems)
+################################################################################
+
+pkglib_LTLIBRARIES += libmm-plugin-sierra-xmm.la
+libmm_plugin_sierra_xmm_la_SOURCES = \
+	sierra/mm-plugin-sierra-xmm.c \
+	sierra/mm-plugin-sierra-xmm.h \
+	$(NULL)
+libmm_plugin_sierra_xmm_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(XMM_COMMON_COMPILER_FLAGS)
+libmm_plugin_sierra_xmm_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
+libmm_plugin_sierra_xmm_la_LIBADD   = $(XMM_COMMON_LIBADD_FLAGS)
 
 ################################################################################
 # plugin: sierra (legacy)
