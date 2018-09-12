@@ -67,8 +67,14 @@ mm_filter_port (MMFilter        *self,
     /* If this is a net device, we always allow it */
     if ((self->priv->enabled_rules & MM_FILTER_RULE_NET) &&
         (g_strcmp0 (subsystem, "net") == 0)) {
-        mm_dbg ("[filter] (%s/%s) port allowed: net device", subsystem, name);
-        return TRUE;
+        /* Ignore blacklisted net devices. */
+        if (mm_kernel_device_get_global_property_as_boolean (port, "ID_MM_DEVICE_IGNORE")) {
+            mm_dbg ("[filter] (%s/%s): port filtered: device is blacklisted", subsystem, name);
+            return FALSE;
+        } else {
+            mm_dbg ("[filter] (%s/%s) port allowed: net device", subsystem, name);
+            return TRUE;
+        }
     }
 
     /* If this is a cdc-wdm device, we always allow it */
