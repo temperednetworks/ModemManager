@@ -85,19 +85,7 @@ mm_broadband_bearer_get_3gpp_cid (MMBroadbandBearer *self)
 static MMBearerIpFamily
 select_bearer_ip_family (MMBroadbandBearer *self)
 {
-    MMBearerIpFamily ip_family;
-
-    ip_family = mm_bearer_properties_get_ip_type (mm_base_bearer_peek_config (MM_BASE_BEARER (self)));
-    if (ip_family == MM_BEARER_IP_FAMILY_NONE || ip_family == MM_BEARER_IP_FAMILY_ANY) {
-        gchar *default_family;
-
-        ip_family = mm_base_bearer_get_default_ip_family (MM_BASE_BEARER (self));
-        default_family = mm_bearer_ip_family_build_string_from_mask (ip_family);
-        mm_dbg ("No specific IP family requested, defaulting to %s", default_family);
-        g_free (default_family);
-    }
-
-    return ip_family;
+    return mm_bearer_properties_get_ip_type (mm_base_bearer_peek_config (MM_BASE_BEARER (self)));
 }
 
 /*****************************************************************************/
@@ -771,6 +759,16 @@ parse_cid_range (MMBaseModem              *modem,
         return TRUE;
     }
 
+    if (ctx->ip_family == MM_BEARER_IP_FAMILY_ANY ||
+        ctx->ip_family == MM_BEARER_IP_FAMILY_NONE) {
+        gchar *default_family;
+
+        ctx->ip_family =  mm_base_bearer_get_default_ip_family (MM_BASE_BEARER (ctx->self));
+        default_family = mm_bearer_ip_family_build_string_from_mask (ctx->ip_family);
+        mm_dbg ("No specific IP family requested, defaulting to %s", default_family);
+        g_free (default_family);
+    }
+
     cid = 0;
     for (l = formats; l; l = g_list_next (l)) {
         MM3gppPdpContextFormat *format = l->data;
@@ -873,15 +871,17 @@ parse_pdp_list (MMBaseModem             *modem,
     for (l = pdp_list; l; l = g_list_next (l)) {
         MM3gppPdpContext *pdp = l->data;
 
-        if (pdp->pdp_type == ctx->ip_family) {
-            const gchar *apn;
+        const gchar *apn;
+        apn = mm_bearer_properties_get_apn (mm_base_bearer_peek_config (MM_BASE_BEARER (ctx->self)));
 
-            apn = mm_bearer_properties_get_apn (mm_base_bearer_peek_config (MM_BASE_BEARER (ctx->self)));
+        if (mm_3gpp_cmp_apn_name (apn, pdp->apn)) {
+            gchar *ip_family_str;
 
-            /* First requested, then existing */
-            if (mm_3gpp_cmp_apn_name (apn, pdp->apn)) {
-                gchar *ip_family_str;
+            if (ctx->ip_family == MM_BEARER_IP_FAMILY_ANY ||
+                ctx->ip_family == MM_BEARER_IP_FAMILY_NONE ||
+                pdp->pdp_type == ctx->ip_family) {
 
+                ctx->ip_family = pdp->pdp_type;
                 /* Found a PDP context with the same APN and PDP type, we'll use it. */
                 ip_family_str = mm_bearer_ip_family_build_string_from_mask (pdp->pdp_type);
                 mm_dbg ("Found PDP context with CID %u and PDP type %s for APN '%s'",
@@ -892,13 +892,12 @@ parse_pdp_list (MMBaseModem             *modem,
                 /* In this case, stop searching */
                 break;
             }
+        }
 
-            /* PDP with no APN set? we may use that one if not exact match found */
-            if (!pdp->apn || !pdp->apn[0]) {
-                mm_dbg ("Found PDP context with CID %u and no APN",
-                        pdp->cid);
-                cid = pdp->cid;
-            }
+        if (!pdp->apn || !pdp->apn[0]) {
+            mm_dbg ("Found PDP context with CID %u and no APN",
+                    pdp->cid);
+            cid = pdp->cid;
         }
 
         if (ctx->max_cid < pdp->cid)
