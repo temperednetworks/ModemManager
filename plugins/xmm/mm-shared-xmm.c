@@ -645,6 +645,7 @@ power_operation_ready (MMBaseModem  *self,
 static void
 common_modem_power_operation (MMSharedXmm         *self,
                               const gchar         *command,
+                              guint                timeout,
                               GAsyncReadyCallback  callback,
                               gpointer             user_data)
 {
@@ -654,7 +655,7 @@ common_modem_power_operation (MMSharedXmm         *self,
 
     mm_base_modem_at_command (MM_BASE_MODEM (self),
                               command,
-                              30,
+                              timeout,
                               FALSE,
                               (GAsyncReadyCallback) power_operation_ready,
                               task);
@@ -673,7 +674,7 @@ mm_shared_xmm_reset (MMIfaceModem        *self,
                      GAsyncReadyCallback  callback,
                      gpointer             user_data)
 {
-    common_modem_power_operation (MM_SHARED_XMM (self), "+CFUN=16", callback, user_data);
+    common_modem_power_operation (MM_SHARED_XMM (self), "+CFUN=1,1", 10, callback, user_data);
 }
 
 gboolean
@@ -689,7 +690,7 @@ mm_shared_xmm_power_off (MMIfaceModem        *self,
                          GAsyncReadyCallback  callback,
                          gpointer             user_data)
 {
-    common_modem_power_operation (MM_SHARED_XMM (self), "+CPWROFF", callback, user_data);
+    common_modem_power_operation (MM_SHARED_XMM (self), "+CPWROFF", 40, callback, user_data);
 }
 
 gboolean
@@ -705,7 +706,7 @@ mm_shared_xmm_power_down (MMIfaceModem        *self,
                           GAsyncReadyCallback  callback,
                           gpointer             user_data)
 {
-    common_modem_power_operation (MM_SHARED_XMM (self), "+CFUN=4", callback, user_data);
+    common_modem_power_operation (MM_SHARED_XMM (self), "+CFUN=4", 40, callback, user_data);
 }
 
 gboolean
@@ -721,7 +722,7 @@ mm_shared_xmm_power_up (MMIfaceModem        *self,
                         GAsyncReadyCallback  callback,
                         gpointer             user_data)
 {
-    common_modem_power_operation (MM_SHARED_XMM (self), "+CFUN=1", callback, user_data);
+    common_modem_power_operation (MM_SHARED_XMM (self), "+CFUN=1", 20, callback, user_data);
 }
 
 /*****************************************************************************/
