@@ -4983,6 +4983,11 @@ interface_initialization_step (GTask *task)
                           "handle-factory-reset",
                           G_CALLBACK (handle_factory_reset),
                           self);
+        /* Allow arbitrary at commands even in failed state */
+        g_signal_connect (ctx->skeleton,
+                              "handle-command",
+                              G_CALLBACK (handle_command),
+                              self);
 
         if (ctx->fatal_error) {
             if (g_error_matches (ctx->fatal_error,
@@ -5004,10 +5009,6 @@ interface_initialization_step (GTask *task)
             g_signal_connect (ctx->skeleton,
                               "handle-create-bearer",
                               G_CALLBACK (handle_create_bearer),
-                              self);
-            g_signal_connect (ctx->skeleton,
-                              "handle-command",
-                              G_CALLBACK (handle_command),
                               self);
             g_signal_connect (ctx->skeleton,
                               "handle-delete-bearer",
