@@ -12,6 +12,8 @@ ATTRS{idVendor}=="1199", ATTRS{idProduct}=="9057", ENV{ID_MM_QMI_CONNECTION_STAT
 
 # MC74XX: Ignore "wwan0" net interface
 ATTRS{idVendor}=="1199", ATTRS{idProduct}=="9071", ENV{.MM_USBIFNUM}=="08", ENV{ID_MM_DEVICE_IGNORE}="1"
+# MC74XX: ignore QDL port
+ATTRS{idVendor}=="1199", ATTRS{idProduct}=="9070",  ENV{ID_MM_DEVICE_IGNORE}="1"
 
 # MC74XX: Add port hints
 #  if 03: primary port
