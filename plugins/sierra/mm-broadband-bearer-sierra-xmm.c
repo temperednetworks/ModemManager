@@ -138,10 +138,10 @@ dial_3gpp_cgact_check_ready (MMBaseModem  *modem,
 }
 
 typedef enum {
-    BEARER_XMM_AUTH_NONE = 0,
-    BEARER_XMM_AUTH_PAP  = 1,
-    BEARER_XMM_AUTH_CHAP = 2
-} BearerInfineonAuthType;
+    BEARER_SIERRA_XMM_AUTH_NONE = 0,
+    BEARER_SIERRA_XMM_AUTH_PAP  = 1,
+    BEARER_SIERRA_XMM_AUTH_CHAP = 2
+} BearerSierraXmmAuthType;
 
 /* Generate WPPP string */
 static gchar *
@@ -162,32 +162,23 @@ build_auth_string (GTask *task)
 
     /* Both user and password are required; otherwise firmware returns an error */
     if (user || password) {
-        gchar *encoded_user = NULL;
-        gchar *encoded_password = NULL;
-        BearerInfineonAuthType auth_type_inf = BEARER_XMM_AUTH_NONE;
+        BearerSierraXmmAuthType auth_type_inf = BEARER_SIERRA_XMM_AUTH_NONE;
 
         /* Prefer CHAP over PAP */
         if (auth_type & MM_BEARER_ALLOWED_AUTH_CHAP)
-            auth_type_inf = BEARER_XMM_AUTH_CHAP;
+            auth_type_inf = BEARER_SIERRA_XMM_AUTH_CHAP;
         else if (auth_type & MM_BEARER_ALLOWED_AUTH_PAP)
-            auth_type_inf = BEARER_XMM_AUTH_PAP;
+            auth_type_inf = BEARER_SIERRA_XMM_AUTH_PAP;
         else if (auth_type == MM_BEARER_ALLOWED_AUTH_UNKNOWN)
-            auth_type_inf = BEARER_XMM_AUTH_CHAP;
+            auth_type_inf = BEARER_SIERRA_XMM_AUTH_CHAP;
         else if (auth_type == MM_BEARER_ALLOWED_AUTH_NONE)
-            auth_type_inf = BEARER_XMM_AUTH_NONE;
-
-        encoded_user = mm_broadband_modem_take_and_convert_to_current_charset (MM_BROADBAND_MODEM (ctx->modem),
-                                                                               g_strdup (user));
-        encoded_password = mm_broadband_modem_take_and_convert_to_current_charset (MM_BROADBAND_MODEM (ctx->modem),
-                                                                                   g_strdup (password));
+            auth_type_inf = BEARER_SIERRA_XMM_AUTH_NONE;
 
         command = g_strdup_printf ("+WPPP=%u,%u,\"%s\",\"%s\"",
                                    auth_type_inf,
                                    ctx->cid,
-                                   encoded_user ? encoded_user : "",
-                                   encoded_password ? encoded_password : "");
-        g_free (encoded_user);
-        g_free (encoded_password);
+                                   user ? user : "",
+                                   password ? password : "");
     } else {
         command = g_strdup_printf ("+WPPP=0,%u,\"\",\"\"", ctx->cid);
     }
