@@ -363,9 +363,23 @@ iface_modem_signal_init (MMIfaceModemSignal *iface)
     iface->load_values_finish   = mm_shared_xmm_signal_load_values_finish;
 }
 
+static MMBroadbandModemClass *
+peek_parent_broadband_modem_class (MMSharedXmm *self)
+{
+    return MM_BROADBAND_MODEM_CLASS (mm_broadband_modem_sierra_xmm_parent_class);
+}
+
+static MMIfaceModemLocation *
+peek_parent_location_interface (MMSharedXmm *self)
+{
+    return NULL;
+}
+
 static void
 shared_xmm_init (MMSharedXmm *iface)
 {
+    iface->peek_parent_broadband_modem_class = peek_parent_broadband_modem_class;
+    iface->peek_parent_location_interface    = peek_parent_location_interface;
 }
 
 static void
