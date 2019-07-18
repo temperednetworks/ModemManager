@@ -706,20 +706,61 @@ cid_selection_3gpp_initialize_context (GTask *task)
 }
 
 static void
+cid_selection_check_user_cid (CidSelection3gppContext *ctx,
+                              guint                    user_cid,
+                              const gchar             *apn)
+{
+    GList *l;
+    for (l = ctx->context_list; l; l = g_list_next (l)) {
+        MM3gppPdpContext *pdp = l->data;
+        if((pdp->cid == user_cid)){
+            /* User selected CID has no apn set */
+            if(!pdp->apn || !pdp->apn[0]) {
+                ctx->cid_reused = FALSE;
+                ctx->cid_overwritten = FALSE;
+            /* User selected cid has a matching apn and ip type */
+            } else if(mm_3gpp_cmp_apn_name (apn,pdp->apn) &&
+                      (ctx->ip_family == MM_BEARER_IP_FAMILY_NONE ||
+                       ctx->ip_family == MM_BEARER_IP_FAMILY_ANY ||
+                       ctx->ip_family == MM_BEARER_IP_FAMILY_IPV4V6 ||
+                       pdp->pdp_type == ctx->ip_family) ) {
+                ctx->cid_reused = TRUE;
+                ctx->cid_overwritten = FALSE;
+            /* User selected cid does not match and must be overwritten */
+            } else {
+                ctx->cid_reused = FALSE;
+                ctx->cid_overwritten = TRUE;
+            }
+        }
+    }
+}
+
+static void
 cid_selection_3gpp_select_context (GTask *task)
 {
     MMBroadbandBearer       *self;
     CidSelection3gppContext *ctx;
+    guint                    user_cid;
+    const gchar             *apn;
+
 
     self = g_task_get_source_object (task);
     ctx = g_task_get_task_data (task);
 
-    ctx->cid = mm_3gpp_select_best_cid (mm_bearer_properties_get_apn (mm_base_bearer_peek_config (MM_BASE_BEARER (self))),
-                                        ctx->ip_family,
-                                        ctx->context_list,
-                                        ctx->context_format_list,
-                                        &ctx->cid_reused,
-                                        &ctx->cid_overwritten);
+    user_cid = mm_bearer_properties_get_pdp_cid(mm_base_bearer_peek_config (MM_BASE_BEARER (self)));
+    apn = mm_bearer_properties_get_apn (mm_base_bearer_peek_config (MM_BASE_BEARER (self)));
+
+    if(user_cid != 0) {
+        ctx->cid = user_cid;
+        cid_selection_check_user_cid (ctx, user_cid, apn);
+    } else {
+        ctx->cid = mm_3gpp_select_best_cid (apn,
+                                            ctx->ip_family,
+                                            ctx->context_list,
+                                            ctx->context_format_list,
+                                            &ctx->cid_reused,
+                                            &ctx->cid_overwritten);
+    }
 
     /* At this point, CID must ALWAYS be set */
     g_assert (ctx->cid);

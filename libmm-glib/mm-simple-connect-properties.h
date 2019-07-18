@@ -69,6 +69,8 @@ void mm_simple_connect_properties_set_operator_id   (MMSimpleConnectProperties *
                                                      const gchar *operator_id);
 void mm_simple_connect_properties_set_apn           (MMSimpleConnectProperties *self,
                                                      const gchar *apn);
+void mm_simple_connect_properties_set_pdp_cid       (MMSimpleConnectProperties *self,
+                                                     guint pdp_cid);
 void mm_simple_connect_properties_set_allowed_auth  (MMSimpleConnectProperties *self,
                                                      MMBearerAllowedAuth allowed_auth);
 void mm_simple_connect_properties_set_user          (MMSimpleConnectProperties *self,
@@ -83,6 +85,7 @@ void mm_simple_connect_properties_set_allow_roaming (MMSimpleConnectProperties *
 const gchar         *mm_simple_connect_properties_get_pin           (MMSimpleConnectProperties *self);
 const gchar         *mm_simple_connect_properties_get_operator_id   (MMSimpleConnectProperties *self);
 const gchar         *mm_simple_connect_properties_get_apn           (MMSimpleConnectProperties *self);
+guint                mm_simple_connect_properties_get_pdp_cid       (MMSimpleConnectProperties *self);
 MMBearerAllowedAuth  mm_simple_connect_properties_get_allowed_auth  (MMSimpleConnectProperties *self);
 const gchar         *mm_simple_connect_properties_get_user          (MMSimpleConnectProperties *self);
 const gchar         *mm_simple_connect_properties_get_password      (MMSimpleConnectProperties *self);
