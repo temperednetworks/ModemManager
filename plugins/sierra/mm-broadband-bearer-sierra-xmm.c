@@ -316,7 +316,7 @@ dial_3gpp_context_step (GTask *task)
 
         /* Setup data channel mapping */
         /* See Intel XMM7160 AT Functional Spec for more info on this command */
-        command = g_strdup_printf ("+XDATACHANNEL=1,1,\"/USBCDC/%u\",\"/USBHS/NCM/%u\",2,%u",
+        command = g_strdup_printf ("+XDATACHANNEL=1,1,\"/USBCDC/%u\",\"/USBHS/NCM/%u\",0,%u",
                                    ctx->usb_acm_config_index, ctx->usb_interface_config_index, ctx->cid);
         mm_base_modem_at_command_full (ctx->modem,
                                        ctx->primary,
