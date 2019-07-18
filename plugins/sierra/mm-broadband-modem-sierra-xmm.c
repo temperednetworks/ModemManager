@@ -37,6 +37,29 @@ G_DEFINE_TYPE_EXTENDED (MMBroadbandModemSierraXmm, mm_broadband_modem_sierra_xmm
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_SIGNAL, iface_modem_signal_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_SHARED_XMM,  shared_xmm_init))
 
+
+struct _MMBroadbandModemSierraXmmPrivate {
+    GRegex *pbready_regex;
+    GRegex *ksup_regex;
+    GRegex *sim_regex;
+    GRegex *nvbu_ind_regex;
+    GRegex *xnitzinfo_regex;
+    GRegex *ctzdst_regex;
+    GRegex *ktempmeas_regex;
+    GRegex *cgev_regex;
+    GRegex *stkpro_regex;
+    GRegex *wdsi_regex;
+    GRegex *cssi_regex;
+    GRegex *cssu_regex;
+    GRegex *cirepi_regex;
+    GRegex *cireph_regex;
+    GRegex *ciregu_regex;
+    GRegex *stkcnf_regex;
+    GRegex *xcmt3gpp2_regex;
+    GRegex *cusd_regex;
+    GRegex *stkcc_regex;
+};
+
 /*****************************************************************************/
 /* Create Bearer (Modem interface) */
 
@@ -93,6 +116,129 @@ modem_create_bearer (MMIfaceModem *self,
 }
 
 /*****************************************************************************/
+/* Setup ports (Broadband modem class) */
+
+static void
+setup_ports (MMBroadbandModem *_self)
+{
+    MMBroadbandModemSierraXmm *self = MM_BROADBAND_MODEM_SIERRA_XMM (_self);
+    MMPortSerialAt        *ports[2];
+    guint                  i;
+
+    /* Call parent's setup ports first always */
+    MM_BROADBAND_MODEM_CLASS (mm_broadband_modem_sierra_xmm_parent_class)->setup_ports (_self);
+
+    ports[0] = mm_base_modem_peek_port_primary   (MM_BASE_MODEM (self));
+    ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
+
+    /* Configure AT ports */
+    for (i = 0; i < G_N_ELEMENTS (ports); i++) {
+        if (!ports[i])
+            continue;
+
+        g_object_set (ports[i],
+                      MM_PORT_SERIAL_SEND_DELAY, (guint64) 0,
+                      NULL);
+
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->pbready_regex,
+            NULL, NULL, NULL);
+
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->ksup_regex,
+            NULL, NULL, NULL);
+
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->sim_regex,
+            NULL, NULL, NULL);
+
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->nvbu_ind_regex,
+            NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->xnitzinfo_regex,
+            NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->ctzdst_regex,
+            NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->ktempmeas_regex,
+            NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->stkpro_regex,
+            NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->wdsi_regex,
+            NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->cirepi_regex,
+            NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->cireph_regex,
+            NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->ciregu_regex,
+            NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->stkcnf_regex,
+            NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->xcmt3gpp2_regex,
+            NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->cusd_regex,
+            NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            self->priv->stkcc_regex,
+            NULL, NULL, NULL);
+    }
+}
+
+static void
+finalize (GObject *object)
+{
+    MMBroadbandModemSierraXmm *self = MM_BROADBAND_MODEM_SIERRA_XMM (object);
+
+    g_regex_unref (self->priv->pbready_regex);
+    g_regex_unref (self->priv->ksup_regex);
+    g_regex_unref (self->priv->sim_regex);
+    g_regex_unref (self->priv->nvbu_ind_regex);
+    g_regex_unref (self->priv->xnitzinfo_regex);
+    g_regex_unref (self->priv->ctzdst_regex);
+    g_regex_unref (self->priv->ktempmeas_regex);
+    g_regex_unref (self->priv->cgev_regex);
+    g_regex_unref (self->priv->stkpro_regex);
+    g_regex_unref (self->priv->wdsi_regex);
+    g_regex_unref (self->priv->cssi_regex);
+    g_regex_unref (self->priv->cssu_regex);
+    g_regex_unref (self->priv->cirepi_regex);
+    g_regex_unref (self->priv->cireph_regex);
+    g_regex_unref (self->priv->ciregu_regex);
+    g_regex_unref (self->priv->stkcnf_regex);
+    g_regex_unref (self->priv->xcmt3gpp2_regex);
+    g_regex_unref (self->priv->cusd_regex);
+    g_regex_unref (self->priv->stkcc_regex);
+
+    G_OBJECT_CLASS (mm_broadband_modem_sierra_xmm_parent_class)->finalize (object);
+}
+
+/*****************************************************************************/
 
 MMBroadbandModemSierraXmm *
 mm_broadband_modem_sierra_xmm_new  (const gchar  *device,
@@ -113,7 +259,68 @@ mm_broadband_modem_sierra_xmm_new  (const gchar  *device,
 static void
 mm_broadband_modem_sierra_xmm_init (MMBroadbandModemSierraXmm *self)
 {
+
+    self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+                                              MM_TYPE_BROADBAND_MODEM_SIERRA_XMM,
+                                              MMBroadbandModemSierraXmmPrivate);
+
+    /* URCs that break ATA command response */
+    self->priv->pbready_regex = g_regex_new ("\\r\\n\\+PBREADY\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->ksup_regex = g_regex_new ("\\r\\n\\+KSUP: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->sim_regex = g_regex_new ("\\r\\n\\+SIM: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->nvbu_ind_regex = g_regex_new ("\\r\\n\\+NVBU_IND: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->xnitzinfo_regex = g_regex_new ("\\r\\n\\+XNITZINFO: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    self->priv->ctzdst_regex = g_regex_new ("\\r\\n\\+CTZDST: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->ktempmeas_regex = g_regex_new ("\\r\\n\\+KTEMPMEAS: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->cgev_regex = g_regex_new ("\\r\\n\\+CGEV: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->stkpro_regex = g_regex_new ("\\r\\n\\+STKPRO: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->wdsi_regex = g_regex_new ("\\r\\n\\+WDSI: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->cssi_regex = g_regex_new ("\\r\\n\\+CSSI: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->cssu_regex = g_regex_new ("\\r\\n\\+CSSU: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->cirepi_regex = g_regex_new ("\\r\\n\\+CIREPI: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->cireph_regex = g_regex_new ("\\r\\n\\+CIREPH: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->ciregu_regex = g_regex_new ("\\r\\n\\+CIREGU: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->stkcnf_regex = g_regex_new ("\\r\\n\\+STKCNF: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->xcmt3gpp2_regex = g_regex_new ("\\r\\n\\+XCMT3GPP2: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->cusd_regex = g_regex_new ("\\r\\n\\+CUSD: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+
+    self->priv->stkcc_regex = g_regex_new ("\\r\\n\\+STKCC: .*\\r\\n",
+                                             G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
 }
+
 
 static void
 iface_modem_init (MMIfaceModem *iface)
@@ -164,4 +371,11 @@ shared_xmm_init (MMSharedXmm *iface)
 static void
 mm_broadband_modem_sierra_xmm_class_init (MMBroadbandModemSierraXmmClass *klass)
 {
+    GObjectClass          *object_class = G_OBJECT_CLASS (klass);
+    MMBroadbandModemClass *broadband_modem_class = MM_BROADBAND_MODEM_CLASS (klass);
+
+    g_type_class_add_private (object_class, sizeof (MMBroadbandModemSierraXmmPrivate));
+
+    broadband_modem_class->setup_ports = setup_ports;
+    object_class->finalize = finalize;
 }
