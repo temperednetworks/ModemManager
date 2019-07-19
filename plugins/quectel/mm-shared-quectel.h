@@ -11,6 +11,7 @@
  * GNU General Public License for more details:
  *
  * Copyright (C) 2018 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2019 Tempered Networks Inc
  */
 
 #ifndef MM_SHARED_QUECTEL_H
@@ -45,5 +46,13 @@ void                      mm_shared_quectel_firmware_load_update_settings       
 MMFirmwareUpdateSettings *mm_shared_quectel_firmware_load_update_settings_finish (MMIfaceModemFirmware  *self,
                                                                                   GAsyncResult          *res,
                                                                                   GError               **error);
+
+typedef struct _MMSharedQuectelUnsolicitedSetup MMSharedQuectelUnsolicitedSetup;
+MMSharedQuectelUnsolicitedSetup *mm_shared_quectel_unsolicited_setup_new  (void);
+void                             mm_shared_quectel_unsolicited_setup_free (MMSharedQuectelUnsolicitedSetup *setup);
+
+void mm_shared_quectel_set_unsolicited_events_handlers (MMBroadbandModem *self,
+                                                    MMSharedQuectelUnsolicitedSetup *setup,
+                                                    gboolean enable);
 
 #endif  /* MM_SHARED_QUECTEL_H */

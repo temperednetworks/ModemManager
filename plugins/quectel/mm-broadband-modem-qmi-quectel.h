@@ -11,6 +11,7 @@
  * GNU General Public License for more details:
  *
  * Copyright (C) 2018 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2019 Tempered Networks Inc
  */
 
 #ifndef MM_BROADBAND_MODEM_QMI_QUECTEL_H
@@ -27,9 +28,11 @@
 
 typedef struct _MMBroadbandModemQmiQuectel MMBroadbandModemQmiQuectel;
 typedef struct _MMBroadbandModemQmiQuectelClass MMBroadbandModemQmiQuectelClass;
+typedef struct _MMBroadbandModemQmiQuectelPrivate MMBroadbandModemQmiQuectelPrivate;
 
 struct _MMBroadbandModemQmiQuectel {
     MMBroadbandModemQmi parent;
+    MMBroadbandModemQmiQuectelPrivate *priv;
 };
 
 struct _MMBroadbandModemQmiQuectelClass{
