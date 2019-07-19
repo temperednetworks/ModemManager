@@ -11,6 +11,7 @@
  * GNU General Public License for more details:
  *
  * Copyright (C) 2018 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2019 Tempered Networks Inc
  */
 
 #include <config.h>
@@ -69,6 +70,103 @@ mm_shared_quectel_firmware_load_update_settings (MMIfaceModemFirmware *self,
                               TRUE,
                               (GAsyncReadyCallback)qfastboot_test_ready,
                               task);
+}
+
+/*****************************************************************************/
+/* Unsolicited result codes */
+
+struct _MMSharedQuectelUnsolicitedSetup {
+    /* URCs to ignore*/
+    GRegex *qind_regex; /* SMS / PB related */
+    GRegex *qodm_regex; /* OMA-DM related */
+    GRegex *qusim_regex; /* SIM card state URC */
+    GRegex *rdy_regex;
+    GRegex *cbm_regex;  /* SMS related */
+};
+
+
+MMSharedQuectelUnsolicitedSetup *
+mm_shared_quectel_unsolicited_setup_new (void)
+{
+    MMSharedQuectelUnsolicitedSetup *setup;
+
+    setup = g_new0 (MMSharedQuectelUnsolicitedSetup, 1);
+
+    /* Prepare regular expressions to setup */
+    setup->qind_regex = g_regex_new ("\\r\\n\\+QIND:(.*)\\r\\n",
+                                       G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    g_assert (setup->qind_regex != NULL);
+
+    setup->qodm_regex = g_regex_new ("\\r\\n\\+QODM: (.*)\\r\\n",
+                                      G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    g_assert (setup->qodm_regex != NULL);
+
+    setup->qusim_regex = g_regex_new ("\\r\\n\\+QUSIM: (.*)\\r\\n",
+                                      G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    g_assert (setup->qusim_regex != NULL);
+
+    setup->rdy_regex = g_regex_new ("\\r\\nRDY\\r\\n",
+                                      G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    g_assert (setup->rdy_regex != NULL);
+
+    setup->cbm_regex = g_regex_new ("\\r\\n\\+CBM: (.*)\\r\\n",
+                                     G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    g_assert (setup->cbm_regex != NULL);
+
+    return setup;
+}
+
+void
+mm_shared_quectel_unsolicited_setup_free (MMSharedQuectelUnsolicitedSetup *setup)
+{
+    g_regex_unref (setup->qind_regex);
+    g_regex_unref (setup->qodm_regex);
+    g_regex_unref (setup->qusim_regex);
+    g_regex_unref (setup->rdy_regex);
+    g_regex_unref (setup->cbm_regex);
+    g_free (setup);
+}
+
+void
+mm_shared_quectel_set_unsolicited_events_handlers (MMBroadbandModem *self,
+                                                   MMSharedQuectelUnsolicitedSetup *setup,
+                                                   gboolean enable)
+{
+    MMPortSerialAt *ports[2];
+    guint i;
+
+    ports[0] = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
+    ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
+
+    /* Enable unsolicited events in given port */
+    for (i = 0; i < G_N_ELEMENTS (ports); i++) {
+        if (!ports[i])
+            continue;
+
+        /* Other unsolicited events to always ignore */
+        if (!enable) {
+            mm_port_serial_at_add_unsolicited_msg_handler (
+                ports[i],
+                setup->qind_regex,
+                NULL, NULL, NULL);
+            mm_port_serial_at_add_unsolicited_msg_handler (
+                ports[i],
+                setup->qodm_regex,
+                NULL, NULL, NULL);
+            mm_port_serial_at_add_unsolicited_msg_handler (
+                ports[i],
+                setup->qusim_regex,
+                NULL, NULL, NULL);
+            mm_port_serial_at_add_unsolicited_msg_handler (
+                ports[i],
+                setup->rdy_regex,
+                NULL, NULL, NULL);
+            mm_port_serial_at_add_unsolicited_msg_handler (
+                ports[i],
+                setup->cbm_regex,
+                NULL, NULL, NULL);
+        }
+    }
 }
 
 /*****************************************************************************/
