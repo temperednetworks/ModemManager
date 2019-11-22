@@ -23,6 +23,10 @@
 #include "mm-plugin-quectel.h"
 #include "mm-broadband-modem-quectel.h"
 
+#if defined WITH_MBIM
+#include "mm-broadband-modem-mbim-quectel.h"
+#endif
+
 #if defined WITH_QMI
 #include "mm-broadband-modem-qmi-quectel.h"
 #endif
@@ -43,6 +47,16 @@ create_modem (MMPlugin     *self,
               GList        *probes,
               GError      **error)
 {
+#if defined WITH_MBIM
+    if (mm_port_probe_list_has_mbim_port (probes)) {
+        mm_dbg ("MBIM-powered Quectel modem found...");
+        return MM_BASE_MODEM (mm_broadband_modem_mbim_quectel_new (uid,
+                                                                   drivers,
+                                                                   mm_plugin_get_name (self),
+                                                                   vendor,
+                                                                   product));
+    }
+#endif
 #if defined WITH_QMI
     if (mm_port_probe_list_has_qmi_port (probes)) {
         mm_dbg ("QMI-powered Quectel modem found...");
@@ -53,7 +67,6 @@ create_modem (MMPlugin     *self,
                                                                   product));
     }
 #endif
-
     return MM_BASE_MODEM (mm_broadband_modem_quectel_new (uid,
                                                           drivers,
                                                           mm_plugin_get_name (self),
@@ -79,6 +92,7 @@ mm_plugin_create (void)
                       MM_PLUGIN_ALLOWED_AT,             TRUE,
                       MM_PLUGIN_ALLOWED_QCDM,           TRUE,
                       MM_PLUGIN_ALLOWED_QMI,            TRUE,
+                      MM_PLUGIN_ALLOWED_MBIM,           TRUE,
                       NULL));
 }
 
