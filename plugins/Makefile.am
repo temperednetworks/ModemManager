@@ -1159,6 +1159,13 @@ libmm_plugin_quectel_la_SOURCES += \
 	quectel/mm-broadband-modem-qmi-quectel.h \
 	$(NULL)
 endif
+if WITH_MBIM
+libmm_plugin_quectel_la_SOURCES += \
+	quectel/mm-broadband-modem-mbim-quectel.c \
+	quectel/mm-broadband-modem-mbim-quectel.h \
+	$(NULL)
+endif
+
 libmm_plugin_quectel_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_quectel_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 
