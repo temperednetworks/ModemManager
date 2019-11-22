@@ -19,18 +19,15 @@
 #include "mm-shared-quectel.h"
 #include "mm-iface-modem-firmware.h"
 #include "mm-iface-modem-3gpp.h"
+#include "mm-log.h"
 
 
 static void shared_quectel_init       (MMSharedQuectel      *iface);
 static void iface_modem_firmware_init (MMIfaceModemFirmware *iface);
-static void iface_modem_3gpp_init     (MMIfaceModem3gpp     *iface);
-
-static MMIfaceModem3gpp *iface_modem_3gpp_parent;
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemQuectel, mm_broadband_modem_quectel, MM_TYPE_BROADBAND_MODEM, 0,
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_FIRMWARE, iface_modem_firmware_init)
-                        G_IMPLEMENT_INTERFACE (MM_TYPE_SHARED_QUECTEL, shared_quectel_init)
-                        G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_3GPP, iface_modem_3gpp_init));
+                        G_IMPLEMENT_INTERFACE (MM_TYPE_SHARED_QUECTEL, shared_quectel_init))
 
 struct _MMBroadbandModemQuectelPrivate {
     /* Unsolicited messaging setup */
@@ -57,88 +54,6 @@ finalize (GObject *object)
     G_OBJECT_CLASS (mm_broadband_modem_quectel_parent_class)->finalize (object);
 }
 
-
-/*****************************************************************************/
-/* Setup/Cleanup unsolicited events (3GPP interface) */
-
-static gboolean
-modem_3gpp_setup_cleanup_unsolicited_events_finish (MMIfaceModem3gpp *self,
-                                                    GAsyncResult *res,
-                                                    GError **error)
-{
-    return g_task_propagate_boolean (G_TASK (res), error);
-}
-
-static void
-parent_setup_unsolicited_events_ready (MMIfaceModem3gpp *self,
-                                       GAsyncResult *res,
-                                       GTask *task)
-{
-    GError *error = NULL;
-
-    if (!iface_modem_3gpp_parent->setup_unsolicited_events_finish (self, res, &error))
-        g_task_return_error (task, error);
-    else {
-        /* Our own setup now */
-        mm_shared_quectel_set_unsolicited_events_handlers (MM_BROADBAND_MODEM (self),
-                                                           MM_BROADBAND_MODEM_QUECTEL (self)->priv->unsolicited_setup,
-                                                           TRUE);
-        g_task_return_boolean (task, TRUE);
-    }
-    g_object_unref (task);
-}
-
-static void
-modem_3gpp_setup_unsolicited_events (MMIfaceModem3gpp *self,
-                                     GAsyncReadyCallback callback,
-                                     gpointer user_data)
-{
-    GTask *task;
-
-    task = g_task_new (self, NULL, callback, user_data);
-
-    /* Chain up parent's setup */
-    iface_modem_3gpp_parent->setup_unsolicited_events (
-        self,
-        (GAsyncReadyCallback)parent_setup_unsolicited_events_ready,
-        task);
-}
-
-static void
-parent_cleanup_unsolicited_events_ready (MMIfaceModem3gpp *self,
-                                         GAsyncResult *res,
-                                         GTask *task)
-{
-    GError *error = NULL;
-
-    if (!iface_modem_3gpp_parent->cleanup_unsolicited_events_finish (self, res, &error))
-        g_task_return_error (task, error);
-    else
-        g_task_return_boolean (task, TRUE);
-    g_object_unref (task);
-}
-
-static void
-modem_3gpp_cleanup_unsolicited_events (MMIfaceModem3gpp *self,
-                                       GAsyncReadyCallback callback,
-                                       gpointer user_data)
-{
-    GTask *task;
-
-    task = g_task_new (self, NULL, callback, user_data);
-
-    /* Our own cleanup first */
-    mm_shared_quectel_set_unsolicited_events_handlers (MM_BROADBAND_MODEM (self),
-                                                       MM_BROADBAND_MODEM_QUECTEL (self)->priv->unsolicited_setup,
-                                                       FALSE);
-
-    /* And now chain up parent's cleanup */
-    iface_modem_3gpp_parent->cleanup_unsolicited_events (
-        self,
-        (GAsyncReadyCallback)parent_cleanup_unsolicited_events_ready,
-        task);
-}
-
 /*****************************************************************************/
 /* Setup ports (Broadband modem class) */
 
@@ -148,10 +63,9 @@ setup_ports (MMBroadbandModem *self)
     /* Call parent's setup ports first always */
     MM_BROADBAND_MODEM_CLASS (mm_broadband_modem_quectel_parent_class)->setup_ports (self);
 
-    /* Now reset the unsolicited messages we'll handle when enabled */
+    /* Now setup NULL URC handlers for nuisance URCs. */
     mm_shared_quectel_set_unsolicited_events_handlers (MM_BROADBAND_MODEM (self),
-                                                       MM_BROADBAND_MODEM_QUECTEL (self)->priv->unsolicited_setup,
-                                                       FALSE);
+                                                       MM_BROADBAND_MODEM_QUECTEL (self)->priv->unsolicited_setup);
 }
 
 /*****************************************************************************/
@@ -182,17 +96,6 @@ iface_modem_firmware_init (MMIfaceModemFirmware *iface)
 static void
 shared_quectel_init (MMSharedQuectel *iface)
 {
-}
-
-static void
-iface_modem_3gpp_init (MMIfaceModem3gpp *iface)
-{
-    iface_modem_3gpp_parent = g_type_interface_peek_parent (iface);
-
-    iface->setup_unsolicited_events = modem_3gpp_setup_unsolicited_events;
-    iface->setup_unsolicited_events_finish = modem_3gpp_setup_cleanup_unsolicited_events_finish;
-    iface->cleanup_unsolicited_events = modem_3gpp_cleanup_unsolicited_events;
-    iface->cleanup_unsolicited_events_finish = modem_3gpp_setup_cleanup_unsolicited_events_finish;
 }
 
 static void
