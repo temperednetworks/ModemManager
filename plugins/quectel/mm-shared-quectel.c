@@ -77,11 +77,11 @@ mm_shared_quectel_firmware_load_update_settings (MMIfaceModemFirmware *self,
 
 struct _MMSharedQuectelUnsolicitedSetup {
     /* URCs to ignore*/
-    GRegex *qind_regex; /* SMS / PB related */
-    GRegex *qodm_regex; /* OMA-DM related */
-    GRegex *qusim_regex; /* SIM card state URC */
-    GRegex *rdy_regex;
-    GRegex *cbm_regex;  /* SMS related */
+    GRegex *qind_regex;             /* SMS / PB related */
+    GRegex *qodm_regex;             /* OMA-DM related */
+    GRegex *qusim_regex;            /* SIM card state URC */
+    GRegex *cpin_not_ready_regex;   /* SIM not Ready */
+    GRegex *cpin_ready_regex;       /* SIM ready. Must be masked for modems without MBIM or QMI */
 };
 
 
@@ -97,7 +97,7 @@ mm_shared_quectel_unsolicited_setup_new (void)
                                        G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
     g_assert (setup->qind_regex != NULL);
 
-    setup->qodm_regex = g_regex_new ("\\r\\n\\+QODM: (.*)\\r\\n",
+    setup->qodm_regex = g_regex_new ("\\r\\n\\r?\\+QODM: \"(FUMO|UI)\"(.*)\\r\\n\\r?",
                                       G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
     g_assert (setup->qodm_regex != NULL);
 
@@ -105,13 +105,13 @@ mm_shared_quectel_unsolicited_setup_new (void)
                                       G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
     g_assert (setup->qusim_regex != NULL);
 
-    setup->rdy_regex = g_regex_new ("\\r\\nRDY\\r\\n",
-                                      G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
-    g_assert (setup->rdy_regex != NULL);
-
-    setup->cbm_regex = g_regex_new ("\\r\\n\\+CBM: (.*)\\r\\n",
+    setup->cpin_ready_regex = g_regex_new ("\\r\\n\\+CPIN: READY\\r\\n",
                                      G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
-    g_assert (setup->cbm_regex != NULL);
+    g_assert (setup->cpin_ready_regex != NULL);
+
+    setup->cpin_not_ready_regex = g_regex_new ("\\r\\n\\+CPIN: NOT READY\\r\\n",
+                                     G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    g_assert (setup->cpin_not_ready_regex != NULL);
 
     return setup;
 }
@@ -122,21 +122,33 @@ mm_shared_quectel_unsolicited_setup_free (MMSharedQuectelUnsolicitedSetup *setup
     g_regex_unref (setup->qind_regex);
     g_regex_unref (setup->qodm_regex);
     g_regex_unref (setup->qusim_regex);
-    g_regex_unref (setup->rdy_regex);
-    g_regex_unref (setup->cbm_regex);
+    g_regex_unref (setup->cpin_not_ready_regex);
     g_free (setup);
 }
 
 void
 mm_shared_quectel_set_unsolicited_events_handlers (MMBroadbandModem *self,
-                                                   MMSharedQuectelUnsolicitedSetup *setup,
-                                                   gboolean enable)
+                                                   MMSharedQuectelUnsolicitedSetup *setup)
 {
     MMPortSerialAt *ports[2];
     guint i;
+    gboolean mask_cpin_ready = FALSE;
 
     ports[0] = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
     ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
+
+
+
+    /* Mask +CPIN: READY URC only for modems with qmi or mbim ports */
+#if defined WITH_MBIM
+    if(mm_base_modem_peek_port_mbim(MM_BASE_MODEM (self)))
+        mask_cpin_ready = TRUE;
+#endif
+
+#if defined WITH_QMI
+    if(mm_base_modem_peek_port_qmi(MM_BASE_MODEM (self)))
+        mask_cpin_ready = TRUE;
+#endif
 
     /* Enable unsolicited events in given port */
     for (i = 0; i < G_N_ELEMENTS (ports); i++) {
@@ -144,28 +156,29 @@ mm_shared_quectel_set_unsolicited_events_handlers (MMBroadbandModem *self,
             continue;
 
         /* Other unsolicited events to always ignore */
-        if (!enable) {
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            setup->qind_regex,
+            NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            setup->qodm_regex,
+            NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            setup->qusim_regex,
+            NULL, NULL, NULL);
+
+        if(mask_cpin_ready) {
             mm_port_serial_at_add_unsolicited_msg_handler (
                 ports[i],
-                setup->qind_regex,
-                NULL, NULL, NULL);
-            mm_port_serial_at_add_unsolicited_msg_handler (
-                ports[i],
-                setup->qodm_regex,
-                NULL, NULL, NULL);
-            mm_port_serial_at_add_unsolicited_msg_handler (
-                ports[i],
-                setup->qusim_regex,
-                NULL, NULL, NULL);
-            mm_port_serial_at_add_unsolicited_msg_handler (
-                ports[i],
-                setup->rdy_regex,
-                NULL, NULL, NULL);
-            mm_port_serial_at_add_unsolicited_msg_handler (
-                ports[i],
-                setup->cbm_regex,
+                setup->cpin_ready_regex,
                 NULL, NULL, NULL);
         }
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            setup->cpin_not_ready_regex,
+            NULL, NULL, NULL);
     }
 }
 

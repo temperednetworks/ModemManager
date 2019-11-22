@@ -52,7 +52,6 @@ MMSharedQuectelUnsolicitedSetup *mm_shared_quectel_unsolicited_setup_new  (void)
 void                             mm_shared_quectel_unsolicited_setup_free (MMSharedQuectelUnsolicitedSetup *setup);
 
 void mm_shared_quectel_set_unsolicited_events_handlers (MMBroadbandModem *self,
-                                                    MMSharedQuectelUnsolicitedSetup *setup,
-                                                    gboolean enable);
+                                                        MMSharedQuectelUnsolicitedSetup *setup);
 
 #endif  /* MM_SHARED_QUECTEL_H */
