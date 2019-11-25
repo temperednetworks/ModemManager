@@ -19,13 +19,17 @@
 #include "mm-shared-quectel.h"
 #include "mm-iface-modem-firmware.h"
 #include "mm-iface-modem-3gpp.h"
+#include "mm-iface-modem.h"
+#include "mm-base-modem-at.h"
 #include "mm-log.h"
 
 
 static void shared_quectel_init       (MMSharedQuectel      *iface);
 static void iface_modem_firmware_init (MMIfaceModemFirmware *iface);
+static void iface_modem_init          (MMIfaceModem         *iface);
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemQuectel, mm_broadband_modem_quectel, MM_TYPE_BROADBAND_MODEM, 0,
+                        G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_FIRMWARE, iface_modem_firmware_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_SHARED_QUECTEL, shared_quectel_init))
 
@@ -69,6 +73,30 @@ setup_ports (MMBroadbandModem *self)
 }
 
 /*****************************************************************************/
+/* Setup ports (Broadband modem class) */
+static void
+modem_at_reset (MMIfaceModem        *self,
+                GAsyncReadyCallback  callback,
+                gpointer             user_data)
+{
+    mm_base_modem_at_command (MM_BASE_MODEM (self),
+                              "+CFUN=1,1",
+                              10,
+                              FALSE,
+                              callback,
+                              user_data);
+
+}
+
+static gboolean
+modem_at_reset_finish (MMIfaceModem     *self,
+                       GAsyncResult     *res,
+                       GError          **error)
+{
+    return !!mm_base_modem_at_command_finish (MM_BASE_MODEM (self), res, error);
+}
+
+/*****************************************************************************/
 
 MMBroadbandModemQuectel *
 mm_broadband_modem_quectel_new (const gchar  *device,
@@ -96,6 +124,13 @@ iface_modem_firmware_init (MMIfaceModemFirmware *iface)
 static void
 shared_quectel_init (MMSharedQuectel *iface)
 {
+}
+
+static void
+iface_modem_init (MMIfaceModem *iface)
+{
+    iface->reset = modem_at_reset;
+    iface->reset_finish = modem_at_reset_finish;
 }
 
 static void
