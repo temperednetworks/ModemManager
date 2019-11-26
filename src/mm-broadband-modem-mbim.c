@@ -3424,7 +3424,7 @@ setup_unsolicited_events_3gpp (MMIfaceModem3gpp *_self,
 {
     MMBroadbandModemMbim *self = MM_BROADBAND_MODEM_MBIM (_self);
 
-    self->priv->setup_flags |= PROCESS_NOTIFICATION_FLAG_SIGNAL_QUALITY;
+    self->priv->setup_flags &= ~PROCESS_NOTIFICATION_FLAG_SIGNAL_QUALITY;
     self->priv->setup_flags |= PROCESS_NOTIFICATION_FLAG_CONNECT;
     self->priv->setup_flags |= PROCESS_NOTIFICATION_FLAG_SUBSCRIBER_INFO;
     self->priv->setup_flags |= PROCESS_NOTIFICATION_FLAG_PACKET_SERVICE;
