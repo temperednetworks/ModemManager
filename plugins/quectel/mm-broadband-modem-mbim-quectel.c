@@ -20,14 +20,15 @@
 #include "mm-shared-quectel.h"
 #include "mm-iface-modem-firmware.h"
 #include "mm-base-modem-at.h"
-#include "mm-iface-modem-3gpp.h"
 #include "mm-log.h"
 
 static void shared_quectel_init       (MMSharedQuectel      *iface);
 static void iface_modem_firmware_init (MMIfaceModemFirmware *iface);
+static void iface_modem_init          (MMIfaceModem         *iface);
 
 
 G_DEFINE_TYPE_EXTENDED (MMBroadbandModemMbimQuectel, mm_broadband_modem_mbim_quectel, MM_TYPE_BROADBAND_MODEM_MBIM, 0,
+                        G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM, iface_modem_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_IFACE_MODEM_FIRMWARE, iface_modem_firmware_init)
                         G_IMPLEMENT_INTERFACE (MM_TYPE_SHARED_QUECTEL, shared_quectel_init))
 
@@ -88,6 +89,94 @@ setup_ports (MMBroadbandModem *self)
                                                        MM_BROADBAND_MODEM_MBIM_QUECTEL (self)->priv->unsolicited_setup);
 }
 
+
+/*****************************************************************************/
+/* Signal quality loading (Modem interface) */
+
+static guint
+modem_load_signal_quality_finish (MMIfaceModem *self,
+                                  GAsyncResult *res,
+                                  GError **error)
+{
+    gssize value;
+
+    value = g_task_propagate_int (G_TASK (res), error);
+    return value < 0 ? 0 : value;
+}
+
+static void
+signal_state_query_ready (MbimDevice *device,
+                          GAsyncResult *res,
+                          GTask *task)
+{
+    MbimMessage *response;
+    GError *error = NULL;
+    guint32 rssi;
+
+    response = mbim_device_command_finish (device, res, &error);
+    if (response &&
+        mbim_message_response_get_result (response, MBIM_MESSAGE_TYPE_COMMAND_DONE, &error) &&
+        mbim_message_atds_signal_response_parse (
+            response,
+            &rssi,
+            NULL, /* error_rate */
+            NULL, /* rscp */
+            NULL, /* ecno */
+            NULL, /* rsrq */
+            NULL, /* rsrp */
+            NULL, /* rssnr */
+            &error)) {
+        guint32 quality;
+
+        /* Normalize the quality. 99 means unknown, we default it to 0 */
+        quality = CLAMP (rssi == 99 ? 0 : rssi, 0, 31) * 100 / 31;
+
+        g_task_return_int (task, quality);
+    } else
+        g_task_return_error (task, error);
+
+    g_object_unref (task);
+
+    if (response)
+        mbim_message_unref (response);
+}
+
+static void
+modem_load_signal_quality (MMIfaceModem *self,
+                           GAsyncReadyCallback callback,
+                           gpointer user_data)
+{
+    MbimDevice *device;
+    MbimMessage *message;
+    GTask *task;
+    MMPortMbim *port;
+
+    port = mm_base_modem_peek_port_mbim (MM_BASE_MODEM (self));
+    if (!port) {
+        g_task_report_new_error (self,
+                                 callback,
+                                 user_data,
+                                 modem_load_signal_quality,
+                                 MM_CORE_ERROR,
+                                 MM_CORE_ERROR_FAILED,
+                                 "Couldn't peek MBIM port");
+        return;
+    }
+
+    device = mm_port_mbim_peek_device (port);
+
+    task = g_task_new (self, NULL, callback, user_data);
+
+    message = mbim_message_atds_signal_query_new (NULL);
+    mbim_device_command (device,
+                         message,
+                         10,
+                         NULL,
+                         (GAsyncReadyCallback)signal_state_query_ready,
+                         task);
+    mbim_message_unref (message);
+}
+
 static void
 iface_modem_firmware_init (MMIfaceModemFirmware *iface)
 {
@@ -98,6 +187,13 @@ iface_modem_firmware_init (MMIfaceModemFirmware *iface)
 static void
 shared_quectel_init (MMSharedQuectel *iface)
 {
+}
+
+static void
+iface_modem_init (MMIfaceModem *iface)
+{
+    iface->load_signal_quality = modem_load_signal_quality;
+    iface->load_signal_quality_finish = modem_load_signal_quality_finish;
 }
 
 static void
