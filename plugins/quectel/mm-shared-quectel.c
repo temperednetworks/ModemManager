@@ -82,6 +82,7 @@ struct _MMSharedQuectelUnsolicitedSetup {
     GRegex *qusim_regex;            /* SIM card state URC */
     GRegex *cpin_not_ready_regex;   /* SIM not Ready */
     GRegex *cpin_ready_regex;       /* SIM ready. Must be masked for modems without MBIM or QMI */
+    GRegex *cmti_regex;             /* SMS related URC enabled by default */
 };
 
 
@@ -97,7 +98,7 @@ mm_shared_quectel_unsolicited_setup_new (void)
                                        G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
     g_assert (setup->qind_regex != NULL);
 
-    setup->qodm_regex = g_regex_new ("\\r\\n\\r?\\+QODM: \"(FUMO|UI)\"(.*)\\r\\n\\r?",
+    setup->qodm_regex = g_regex_new ("\\r\\n\\r?\\+QODM: \"(FUMO|UI|DME)\"(.*)\\r\\n\\r?",
                                       G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
     g_assert (setup->qodm_regex != NULL);
 
@@ -113,6 +114,9 @@ mm_shared_quectel_unsolicited_setup_new (void)
                                      G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
     g_assert (setup->cpin_not_ready_regex != NULL);
 
+    setup->cmti_regex = mm_3gpp_cmti_regex_get();
+    g_assert (setup->cmti_regex != NULL);
+
     return setup;
 }
 
@@ -123,6 +127,8 @@ mm_shared_quectel_unsolicited_setup_free (MMSharedQuectelUnsolicitedSetup *setup
     g_regex_unref (setup->qodm_regex);
     g_regex_unref (setup->qusim_regex);
     g_regex_unref (setup->cpin_not_ready_regex);
+    g_regex_unref (setup->cpin_ready_regex);
+    g_regex_unref (setup->cmti_regex);
     g_free (setup);
 }
 
@@ -132,7 +138,7 @@ mm_shared_quectel_set_unsolicited_events_handlers (MMBroadbandModem *self,
 {
     MMPortSerialAt *ports[2];
     guint i;
-    gboolean mask_cpin_ready = FALSE;
+    gboolean mask_3gpp_urc = FALSE;
 
     ports[0] = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
     ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
@@ -142,12 +148,12 @@ mm_shared_quectel_set_unsolicited_events_handlers (MMBroadbandModem *self,
     /* Mask +CPIN: READY URC only for modems with qmi or mbim ports */
 #if defined WITH_MBIM
     if(mm_base_modem_peek_port_mbim(MM_BASE_MODEM (self)))
-        mask_cpin_ready = TRUE;
+        mask_3gpp_urc = TRUE;
 #endif
 
 #if defined WITH_QMI
     if(mm_base_modem_peek_port_qmi(MM_BASE_MODEM (self)))
-        mask_cpin_ready = TRUE;
+        mask_3gpp_urc = TRUE;
 #endif
 
     /* Enable unsolicited events in given port */
@@ -169,11 +175,16 @@ mm_shared_quectel_set_unsolicited_events_handlers (MMBroadbandModem *self,
             setup->qusim_regex,
             NULL, NULL, NULL);
 
-        if(mask_cpin_ready) {
+        if(mask_3gpp_urc) {
             mm_port_serial_at_add_unsolicited_msg_handler (
                 ports[i],
                 setup->cpin_ready_regex,
                 NULL, NULL, NULL);
+
+            mm_port_serial_at_add_unsolicited_msg_handler (
+               ports[i],
+               setup->cmti_regex,
+               NULL, NULL, NULL);
         }
         mm_port_serial_at_add_unsolicited_msg_handler (
             ports[i],
