@@ -1591,18 +1591,21 @@ mm_3gpp_select_best_cid (const gchar      *apn,
     for (l = context_list; l; l = g_list_next (l)) {
         MM3gppPdpContext *pdp = l->data;
 
-        /* Match PDP type */
-        if (pdp->pdp_type == ip_family) {
-            /* Try to match exact APN and PDP type */
+        /* Match PDP type or any/none */
+        if (pdp->pdp_type == ip_family ||
+            ip_family == MM_BEARER_IP_FAMILY_ANY ||
+            ip_family == MM_BEARER_IP_FAMILY_NONE ||
+            ip_family == MM_BEARER_IP_FAMILY_IPV4V6 ) {
+            /* Try to match exact APN*/
             if (mm_3gpp_cmp_apn_name (apn, pdp->apn)) {
                 exact_cid = pdp->cid;
                 break;
             }
-
-            /* Same PDP type but with no APN set? we may use that one if no exact match found */
-            if ((!pdp->apn || !pdp->apn[0]) && !blank_cid)
-                blank_cid = pdp->cid;
         }
+
+        /* No APN set? we may use that one if no exact match found */
+        if ((!pdp->apn || !pdp->apn[0]) && !blank_cid)
+            blank_cid = pdp->cid;
 
         /* If an unused CID was not found yet and the previous CID is not (CID - 1),
          * this means that (previous CID + 1) is an unused CID that can be used.

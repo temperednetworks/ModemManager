@@ -63,6 +63,8 @@ MMBearerProperties *mm_bearer_properties_new (void);
 
 void mm_bearer_properties_set_apn           (MMBearerProperties *self,
                                              const gchar *apn);
+void mm_bearer_properties_set_pdp_cid       (MMBearerProperties *self,
+                                             guint               pdp_cid);
 void mm_bearer_properties_set_allowed_auth  (MMBearerProperties *self,
                                              MMBearerAllowedAuth allowed_auth);
 void mm_bearer_properties_set_user          (MMBearerProperties *self,
@@ -77,6 +79,7 @@ void mm_bearer_properties_set_rm_protocol   (MMBearerProperties *self,
                                              MMModemCdmaRmProtocol protocol);
 
 const gchar           *mm_bearer_properties_get_apn           (MMBearerProperties *self);
+guint                  mm_bearer_properties_get_pdp_cid       (MMBearerProperties *self);
 MMBearerAllowedAuth    mm_bearer_properties_get_allowed_auth  (MMBearerProperties *self);
 const gchar           *mm_bearer_properties_get_user          (MMBearerProperties *self);
 const gchar           *mm_bearer_properties_get_password      (MMBearerProperties *self);

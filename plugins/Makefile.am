@@ -422,7 +422,7 @@ libmm_plugin_option_hso_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 libmm_plugin_option_hso_la_LIBADD   = $(OPTION_COMMON_LIBADD_FLAGS)
 
 ################################################################################
-# plugin: sierra (new QMI or MBIM modems)
+# plugin: sierra (Qualcomm based QMI or MBIM modems)
 ################################################################################
 
 dist_udevrules_DATA += sierra/77-mm-sierra.rules
@@ -434,6 +434,25 @@ libmm_plugin_sierra_la_SOURCES = \
 	$(NULL)
 libmm_plugin_sierra_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_sierra_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
+
+################################################################################
+# plugin: sierra xmm (XMM based modems)
+################################################################################
+
+dist_udevrules_DATA += sierra/77-mm-sierra-xmm.rules
+
+pkglib_LTLIBRARIES += libmm-plugin-sierra-xmm.la
+libmm_plugin_sierra_xmm_la_SOURCES = \
+	sierra/mm-plugin-sierra-xmm.c \
+	sierra/mm-plugin-sierra-xmm.h \
+	sierra/mm-broadband-modem-sierra-xmm.c \
+	sierra/mm-broadband-modem-sierra-xmm.h \
+	sierra/mm-broadband-bearer-sierra-xmm.c \
+	sierra/mm-broadband-bearer-sierra-xmm.h \
+	$(NULL)
+libmm_plugin_sierra_xmm_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(XMM_COMMON_COMPILER_FLAGS)
+libmm_plugin_sierra_xmm_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
+libmm_plugin_sierra_xmm_la_LIBADD   = $(XMM_COMMON_LIBADD_FLAGS)
 
 ################################################################################
 # plugin: sierra (legacy)
@@ -1144,6 +1163,13 @@ libmm_plugin_quectel_la_SOURCES += \
 	quectel/mm-broadband-modem-qmi-quectel.h \
 	$(NULL)
 endif
+if WITH_MBIM
+libmm_plugin_quectel_la_SOURCES += \
+	quectel/mm-broadband-modem-mbim-quectel.c \
+	quectel/mm-broadband-modem-mbim-quectel.h \
+	$(NULL)
+endif
+
 libmm_plugin_quectel_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_quectel_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 

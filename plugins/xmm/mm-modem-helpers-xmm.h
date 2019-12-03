@@ -70,4 +70,16 @@ gboolean mm_xmm_parse_xlcsslp_query_response (const gchar  *response,
                                               gchar       **supl_address,
                                               GError      **error);
 
+gboolean mm_xmm_parse_cgpaddr_response (const gchar *reply,
+                                        guint *cid,
+                                        gchar **ipv4addr,
+                                        gchar **ipv6addr,
+                                        GError **error);
+
+gboolean mm_xmm_parse_xdns_query_response  (const gchar *reply,
+                                            guint cid,
+                                            GStrv *dns_v4,
+                                            GStrv *dns_v6,
+                                            GError **error);
+
 #endif  /* MM_MODEM_HELPERS_XMM_H */

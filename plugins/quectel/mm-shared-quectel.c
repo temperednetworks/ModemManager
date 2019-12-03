@@ -11,6 +11,7 @@
  * GNU General Public License for more details:
  *
  * Copyright (C) 2018 Aleksander Morgado <aleksander@aleksander.es>
+ * Copyright (C) 2019 Tempered Networks Inc
  */
 
 #include <config.h>
@@ -69,6 +70,127 @@ mm_shared_quectel_firmware_load_update_settings (MMIfaceModemFirmware *self,
                               TRUE,
                               (GAsyncReadyCallback)qfastboot_test_ready,
                               task);
+}
+
+/*****************************************************************************/
+/* Unsolicited result codes */
+
+struct _MMSharedQuectelUnsolicitedSetup {
+    /* URCs to ignore*/
+    GRegex *qind_regex;             /* SMS / PB related */
+    GRegex *qodm_regex;             /* OMA-DM related */
+    GRegex *qusim_regex;            /* SIM card state URC */
+    GRegex *cpin_not_ready_regex;   /* SIM not Ready */
+    GRegex *cpin_ready_regex;       /* SIM ready. Must be masked for modems without MBIM or QMI */
+    GRegex *cmti_regex;             /* SMS related URC enabled by default */
+};
+
+
+MMSharedQuectelUnsolicitedSetup *
+mm_shared_quectel_unsolicited_setup_new (void)
+{
+    MMSharedQuectelUnsolicitedSetup *setup;
+
+    setup = g_new0 (MMSharedQuectelUnsolicitedSetup, 1);
+
+    /* Prepare regular expressions to setup */
+    setup->qind_regex = g_regex_new ("\\r\\n\\+QIND:(.*)\\r\\n",
+                                       G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    g_assert (setup->qind_regex != NULL);
+
+    setup->qodm_regex = g_regex_new ("\\r\\n\\r?\\+QODM: \"(FUMO|UI|DME)\"(.*)\\r\\n\\r?",
+                                      G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    g_assert (setup->qodm_regex != NULL);
+
+    setup->qusim_regex = g_regex_new ("\\r\\n\\+QUSIM: (.*)\\r\\n",
+                                      G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    g_assert (setup->qusim_regex != NULL);
+
+    setup->cpin_ready_regex = g_regex_new ("\\r\\n\\+CPIN: READY\\r\\n",
+                                     G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    g_assert (setup->cpin_ready_regex != NULL);
+
+    setup->cpin_not_ready_regex = g_regex_new ("\\r\\n\\+CPIN: NOT READY\\r\\n",
+                                     G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, NULL);
+    g_assert (setup->cpin_not_ready_regex != NULL);
+
+    setup->cmti_regex = mm_3gpp_cmti_regex_get();
+    g_assert (setup->cmti_regex != NULL);
+
+    return setup;
+}
+
+void
+mm_shared_quectel_unsolicited_setup_free (MMSharedQuectelUnsolicitedSetup *setup)
+{
+    g_regex_unref (setup->qind_regex);
+    g_regex_unref (setup->qodm_regex);
+    g_regex_unref (setup->qusim_regex);
+    g_regex_unref (setup->cpin_not_ready_regex);
+    g_regex_unref (setup->cpin_ready_regex);
+    g_regex_unref (setup->cmti_regex);
+    g_free (setup);
+}
+
+void
+mm_shared_quectel_set_unsolicited_events_handlers (MMBroadbandModem *self,
+                                                   MMSharedQuectelUnsolicitedSetup *setup)
+{
+    MMPortSerialAt *ports[2];
+    guint i;
+    gboolean mask_3gpp_urc = FALSE;
+
+    ports[0] = mm_base_modem_peek_port_primary (MM_BASE_MODEM (self));
+    ports[1] = mm_base_modem_peek_port_secondary (MM_BASE_MODEM (self));
+
+
+
+    /* Mask +CPIN: READY URC only for modems with qmi or mbim ports */
+#if defined WITH_MBIM
+    if(mm_base_modem_peek_port_mbim(MM_BASE_MODEM (self)))
+        mask_3gpp_urc = TRUE;
+#endif
+
+#if defined WITH_QMI
+    if(mm_base_modem_peek_port_qmi(MM_BASE_MODEM (self)))
+        mask_3gpp_urc = TRUE;
+#endif
+
+    /* Enable unsolicited events in given port */
+    for (i = 0; i < G_N_ELEMENTS (ports); i++) {
+        if (!ports[i])
+            continue;
+
+        /* Other unsolicited events to always ignore */
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            setup->qind_regex,
+            NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            setup->qodm_regex,
+            NULL, NULL, NULL);
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            setup->qusim_regex,
+            NULL, NULL, NULL);
+
+        if(mask_3gpp_urc) {
+            mm_port_serial_at_add_unsolicited_msg_handler (
+                ports[i],
+                setup->cpin_ready_regex,
+                NULL, NULL, NULL);
+
+            mm_port_serial_at_add_unsolicited_msg_handler (
+               ports[i],
+               setup->cmti_regex,
+               NULL, NULL, NULL);
+        }
+        mm_port_serial_at_add_unsolicited_msg_handler (
+            ports[i],
+            setup->cpin_not_ready_regex,
+            NULL, NULL, NULL);
+    }
 }
 
 /*****************************************************************************/
