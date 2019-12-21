@@ -37,6 +37,14 @@ AM_CFLAGS  += $(MBIM_CFLAGS)
 AM_LDFLAGS += $(MBIM_LIBS)
 endif
 
+# Common compiler/linker flags for shared utils
+SHARED_COMMON_COMPILER_FLAGS = \
+	$(NULL)
+SHARED_COMMON_LINKER_FLAGS = \
+	-module        \
+	-avoid-version \
+	$(NULL)
+
 # Common compiler/linker flags for plugins
 PLUGIN_COMMON_COMPILER_FLAGS = \
 	$(NULL)
@@ -130,58 +138,21 @@ test_modem_helpers_icera_LDADD = \
 	$(top_builddir)/libmm-glib/libmm-glib.la \
 	$(NULL)
 
-noinst_LTLIBRARIES += libmm-utils-icera.la
-libmm_utils_icera_la_SOURCES = \
+pkglib_LTLIBRARIES += libmm-shared-icera.la
+libmm_shared_icera_la_SOURCES = \
+	icera/mm-shared.c \
 	icera/mm-broadband-modem-icera.h \
 	icera/mm-broadband-modem-icera.c \
 	icera/mm-broadband-bearer-icera.h \
 	icera/mm-broadband-bearer-icera.c \
 	$(NULL)
-libmm_utils_icera_la_LIBADD = \
+libmm_shared_icera_la_CPPFLAGS = $(SHARED_COMMON_COMPILER_FLAGS)
+libmm_shared_icera_la_LDFLAGS = $(SHARED_COMMON_LINKER_FLAGS)
+libmm_shared_icera_la_LIBADD = \
 	$(builddir)/libhelpers-icera.la \
 	$(NULL)
 
 ICERA_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/icera
-ICERA_COMMON_LIBADD_FLAGS   = $(builddir)/libmm-utils-icera.la
-
-################################################################################
-# common ericsson mbm support
-################################################################################
-
-noinst_LTLIBRARIES += libhelpers-mbm.la
-libhelpers_mbm_la_SOURCES = \
-	mbm/mm-modem-helpers-mbm.c \
-	mbm/mm-modem-helpers-mbm.h \
-	$(NULL)
-
-noinst_PROGRAMS += test-modem-helpers-mbm
-test_modem_helpers_mbm_SOURCES = \
-	mbm/tests/test-modem-helpers-mbm.c \
-	$(NULL)
-test_modem_helpers_mbm_CPPFLAGS = \
-	-I$(top_srcdir)/plugins/mbm \
-	$(NULL)
-test_modem_helpers_mbm_LDADD = \
-	$(builddir)/libhelpers-mbm.la \
-	$(top_builddir)/src/libhelpers.la \
-	$(top_builddir)/libmm-glib/libmm-glib.la \
-	$(NULL)
-
-noinst_LTLIBRARIES += libmm-utils-mbm.la
-libmm_utils_mbm_la_SOURCES = \
-	mbm/mm-broadband-modem-mbm.c \
-	mbm/mm-broadband-modem-mbm.h \
-	mbm/mm-broadband-bearer-mbm.c \
-	mbm/mm-broadband-bearer-mbm.h \
-	mbm/mm-sim-mbm.c \
-	mbm/mm-sim-mbm.h \
-	$(NULL)
-libmm_utils_mbm_la_LIBADD = \
-	$(builddir)/libhelpers-mbm.la \
-	$(NULL)
-
-MBM_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/mbm
-MBM_COMMON_LIBADD_FLAGS   = $(builddir)/libmm-utils-mbm.la
 
 ################################################################################
 # common sierra support
@@ -206,8 +177,9 @@ test_modem_helpers_sierra_LDADD = \
 	$(top_builddir)/libmm-glib/libmm-glib.la \
 	$(NULL)
 
-noinst_LTLIBRARIES += libmm-utils-sierra.la
-libmm_utils_sierra_la_SOURCES = \
+pkglib_LTLIBRARIES += libmm-shared-sierra.la
+libmm_shared_sierra_la_SOURCES = \
+	sierra/mm-shared.c \
 	sierra/mm-common-sierra.c \
 	sierra/mm-common-sierra.h \
 	sierra/mm-sim-sierra.c \
@@ -217,41 +189,46 @@ libmm_utils_sierra_la_SOURCES = \
 	sierra/mm-broadband-modem-sierra.c  \
 	sierra/mm-broadband-modem-sierra.h  \
 	$(NULL)
-libmm_utils_sierra_la_LIBADD = \
+libmm_shared_sierra_la_CPPFLAGS = $(SHARED_COMMON_COMPILER_FLAGS)
+libmm_shared_sierra_la_LDFLAGS = $(SHARED_COMMON_LINKER_FLAGS)
+libmm_shared_sierra_la_LIBADD = \
 	$(builddir)/libhelpers-sierra.la \
 	$(NULL)
 
 SIERRA_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/sierra
-SIERRA_COMMON_LIBADD_FLAGS   = $(builddir)/libmm-utils-sierra.la
 
 ################################################################################
 # common option support
 ################################################################################
 
-noinst_LTLIBRARIES += libmm-utils-option.la
-libmm_utils_option_la_SOURCES = \
+pkglib_LTLIBRARIES += libmm-shared-option.la
+libmm_shared_option_la_SOURCES = \
+	option/mm-shared.c \
 	option/mm-broadband-modem-option.c \
 	option/mm-broadband-modem-option.h \
 	$(NULL)
+libmm_shared_option_la_CPPFLAGS = $(SHARED_COMMON_COMPILER_FLAGS)
+libmm_shared_option_la_LDFLAGS = $(SHARED_COMMON_LINKER_FLAGS)
 
 OPTION_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/option
-OPTION_COMMON_LIBADD_FLAGS   = $(builddir)/libmm-utils-option.la
 
 ################################################################################
 # common novatel support
 ################################################################################
 
 # Common Novatel modem support library
-noinst_LTLIBRARIES += libmm-utils-novatel.la
-libmm_utils_novatel_la_SOURCES = \
+pkglib_LTLIBRARIES += libmm-shared-novatel.la
+libmm_shared_novatel_la_SOURCES = \
+	novatel/mm-shared.c \
 	novatel/mm-common-novatel.c \
 	novatel/mm-common-novatel.h \
 	novatel/mm-broadband-modem-novatel.c \
 	novatel/mm-broadband-modem-novatel.h \
 	$(NULL)
+libmm_shared_novatel_la_CPPFLAGS = $(SHARED_COMMON_COMPILER_FLAGS)
+libmm_shared_novatel_la_LDFLAGS = $(SHARED_COMMON_LINKER_FLAGS)
 
 NOVATEL_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/novatel
-NOVATEL_COMMON_LIBADD_FLAGS   = $(builddir)/libmm-utils-novatel.la
 
 ################################################################################
 # common xmm support
@@ -276,8 +253,9 @@ test_modem_helpers_xmm_LDADD = \
 	$(top_builddir)/libmm-glib/libmm-glib.la \
 	$(NULL)
 
-noinst_LTLIBRARIES += libmm-utils-xmm.la
-libmm_utils_xmm_la_SOURCES = \
+pkglib_LTLIBRARIES += libmm-shared-xmm.la
+libmm_shared_xmm_la_SOURCES = \
+	xmm/mm-shared.c \
 	xmm/mm-shared-xmm.h \
 	xmm/mm-shared-xmm.c \
 	xmm/mm-broadband-modem-xmm.h \
@@ -285,18 +263,112 @@ libmm_utils_xmm_la_SOURCES = \
 	$(NULL)
 
 if WITH_MBIM
-libmm_utils_xmm_la_SOURCES += \
+libmm_shared_xmm_la_SOURCES += \
 	xmm/mm-broadband-modem-mbim-xmm.h \
 	xmm/mm-broadband-modem-mbim-xmm.c \
 	$(NULL)
 endif
 
-libmm_utils_xmm_la_LIBADD = \
+libmm_shared_xmm_la_CPPFLAGS = $(SHARED_COMMON_COMPILER_FLAGS)
+libmm_shared_xmm_la_LDFLAGS = $(SHARED_COMMON_LINKER_FLAGS)
+libmm_shared_xmm_la_LIBADD = \
 	$(builddir)/libhelpers-xmm.la \
 	$(NULL)
 
 XMM_COMMON_COMPILER_FLAGS = -I$(top_srcdir)/plugins/xmm
-XMM_COMMON_LIBADD_FLAGS   = $(builddir)/libmm-utils-xmm.la
+
+################################################################################
+# common telit support
+################################################################################
+
+TELIT_ENUMS_INPUTS = \
+	$(top_srcdir)/plugins/telit/mm-modem-helpers-telit.h \
+	$(NULL)
+
+TELIT_ENUMS_GENERATED = \
+	telit/mm-telit-enums-types.h \
+	telit/mm-telit-enums-types.c \
+	$(NULL)
+
+BUILT_SOURCES += $(TELIT_ENUMS_GENERATED)
+CLEANFILES    += $(TELIT_ENUMS_GENERATED)
+
+telit/mm-telit-enums-types.h: Makefile.am $(TELIT_ENUMS_INPUTS) $(top_srcdir)/build-aux/mm-enums-template.h
+	$(AM_V_GEN) \
+		$(MKDIR_P) telit; \
+		$(GLIB_MKENUMS) \
+			--fhead "#include \"mm-modem-helpers-telit.h\"\n#ifndef __MM_TELIT_ENUMS_TYPES_H__\n#define __MM_TELIT_ENUMS_TYPES_H__\n" \
+			--template $(top_srcdir)/build-aux/mm-enums-template.h \
+			--ftail "#endif /* __MM_TELIT_ENUMS_TYPES_H__ */\n" \
+			$(TELIT_ENUMS_INPUTS) > $@
+
+telit/mm-telit-enums-types.c: Makefile.am $(top_srcdir)/build-aux/mm-enums-template.c telit/mm-telit-enums-types.h
+	$(AM_V_GEN) \
+		$(MKDIR_P) telit; \
+		$(GLIB_MKENUMS) \
+			--fhead "#include \"mm-telit-enums-types.h\"" \
+			--template $(top_srcdir)/build-aux/mm-enums-template.c \
+			$(TELIT_ENUMS_INPUTS) > $@
+
+noinst_LTLIBRARIES += libhelpers-telit.la
+libhelpers_telit_la_SOURCES = \
+	telit/mm-modem-helpers-telit.c \
+	telit/mm-modem-helpers-telit.h \
+	$(NULL)
+libhelpers_telit_la_CPPFLAGS = \
+	-I$(top_srcdir)/plugins/telit \
+	-I$(top_builddir)/plugins/telit \
+	$(NULL)
+nodist_libhelpers_telit_la_SOURCES = $(TELIT_ENUMS_GENERATED)
+
+noinst_PROGRAMS += test-modem-helpers-telit
+test_modem_helpers_telit_SOURCES = \
+	telit/tests/test-mm-modem-helpers-telit.c \
+	$(NULL)
+test_modem_helpers_telit_CPPFLAGS = \
+	-I$(top_srcdir)/plugins/telit \
+	-I$(top_builddir)/plugins/telit \
+	$(TEST_COMMON_COMPILER_FLAGS) \
+	$(NULL)
+test_modem_helpers_telit_LDADD = \
+	$(TEST_COMMON_LIBADD_FLAGS) \
+	$(builddir)/libhelpers-telit.la \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
+# Common telit modem support library
+pkglib_LTLIBRARIES += libmm-shared-telit.la
+libmm_shared_telit_la_SOURCES = \
+	telit/mm-shared.c \
+	telit/mm-common-telit.c \
+	telit/mm-common-telit.h \
+	telit/mm-shared-telit.c \
+	telit/mm-shared-telit.h \
+	telit/mm-broadband-modem-telit.c \
+	telit/mm-broadband-modem-telit.h \
+	$(NULL)
+if WITH_MBIM
+libmm_shared_telit_la_SOURCES += \
+	telit/mm-broadband-modem-mbim-telit.h \
+	telit/mm-broadband-modem-mbim-telit.c \
+	$(NULL)
+endif
+
+libmm_shared_telit_la_CPPFLAGS = \
+	-I$(top_srcdir)/plugins/telit \
+	-I$(top_builddir)/plugins/telit \
+	$(SHARED_COMMON_COMPILER_FLAGS) \
+	$(NULL)
+libmm_shared_telit_la_LDFLAGS = $(SHARED_COMMON_LINKER_FLAGS)
+libmm_shared_telit_la_LIBADD = \
+	$(builddir)/libhelpers-telit.la \
+	$(NULL)
+
+TELIT_COMMON_COMPILER_FLAGS = \
+	-I$(top_srcdir)/plugins/telit \
+	-I$(top_builddir)/plugins/telit \
+	$(NULL)
 
 ################################################################################
 # plugin: generic
@@ -378,14 +450,39 @@ AM_CFLAGS += -DTESTUDEVRULESDIR_HUAWEI=\"${srcdir}/huawei\"
 # plugin: ericsson mbm
 ################################################################################
 
+noinst_LTLIBRARIES += libhelpers-mbm.la
+libhelpers_mbm_la_SOURCES = \
+	mbm/mm-modem-helpers-mbm.c \
+	mbm/mm-modem-helpers-mbm.h \
+	$(NULL)
+
+noinst_PROGRAMS += test-modem-helpers-mbm
+test_modem_helpers_mbm_SOURCES = \
+	mbm/tests/test-modem-helpers-mbm.c \
+	$(NULL)
+test_modem_helpers_mbm_CPPFLAGS = \
+	-I$(top_srcdir)/plugins/mbm \
+	$(NULL)
+test_modem_helpers_mbm_LDADD = \
+	$(builddir)/libhelpers-mbm.la \
+	$(top_builddir)/src/libhelpers.la \
+	$(top_builddir)/libmm-glib/libmm-glib.la \
+	$(NULL)
+
 pkglib_LTLIBRARIES += libmm-plugin-ericsson-mbm.la
 libmm_plugin_ericsson_mbm_la_SOURCES = \
+	mbm/mm-broadband-modem-mbm.c \
+	mbm/mm-broadband-modem-mbm.h \
+	mbm/mm-broadband-bearer-mbm.c \
+	mbm/mm-broadband-bearer-mbm.h \
+	mbm/mm-sim-mbm.c \
+	mbm/mm-sim-mbm.h \
 	mbm/mm-plugin-mbm.c \
 	mbm/mm-plugin-mbm.h \
 	$(NULL)
-libmm_plugin_ericsson_mbm_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(MBM_COMMON_COMPILER_FLAGS)
+libmm_plugin_ericsson_mbm_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS)
 libmm_plugin_ericsson_mbm_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_ericsson_mbm_la_LIBADD   = $(MBM_COMMON_LIBADD_FLAGS)
+libmm_plugin_ericsson_mbm_la_LIBADD   = $(builddir)/libhelpers-mbm.la
 
 dist_udevrules_DATA += mbm/77-mm-ericsson-mbm.rules
 
@@ -402,7 +499,6 @@ libmm_plugin_option_la_SOURCES = \
 	$(NULL)
 libmm_plugin_option_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(OPTION_COMMON_COMPILER_FLAGS)
 libmm_plugin_option_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_option_la_LIBADD   = $(OPTION_COMMON_LIBADD_FLAGS)
 
 ################################################################################
 # plugin: option hso
@@ -419,7 +515,6 @@ libmm_plugin_option_hso_la_SOURCES = \
 	$(NULL)
 libmm_plugin_option_hso_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(OPTION_COMMON_COMPILER_FLAGS)
 libmm_plugin_option_hso_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_option_hso_la_LIBADD   = $(OPTION_COMMON_LIBADD_FLAGS)
 
 ################################################################################
 # plugin: sierra (Qualcomm based QMI or MBIM modems)
@@ -467,7 +562,6 @@ libmm_plugin_sierra_legacy_la_SOURCES = \
 	$(NULL)
 libmm_plugin_sierra_legacy_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(ICERA_COMMON_COMPILER_FLAGS) $(SIERRA_COMMON_COMPILER_FLAGS)
 libmm_plugin_sierra_legacy_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_sierra_legacy_la_LIBADD   = $(ICERA_COMMON_LIBADD_FLAGS) $(SIERRA_COMMON_LIBADD_FLAGS)
 
 ################################################################################
 # plugin: wavecom (now sierra airlink)
@@ -510,7 +604,6 @@ libmm_plugin_nokia_icera_la_SOURCES = \
 	$(NULL)
 libmm_plugin_nokia_icera_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(ICERA_COMMON_COMPILER_FLAGS)
 libmm_plugin_nokia_icera_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_nokia_icera_la_LIBADD   = $(ICERA_COMMON_LIBADD_FLAGS)
 
 dist_udevrules_DATA += nokia/77-mm-nokia-port-types.rules
 
@@ -533,7 +626,6 @@ libmm_plugin_zte_la_SOURCES = \
 	$(NULL)
 libmm_plugin_zte_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(ICERA_COMMON_COMPILER_FLAGS)
 libmm_plugin_zte_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_zte_la_LIBADD   = $(ICERA_COMMON_LIBADD_FLAGS)
 
 dist_udevrules_DATA += zte/77-mm-zte-port-types.rules
 
@@ -698,7 +790,6 @@ libmm_plugin_samsung_la_SOURCES = \
 	$(NULL)
 libmm_plugin_samsung_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(ICERA_COMMON_COMPILER_FLAGS)
 libmm_plugin_samsung_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_samsung_la_LIBADD   = $(ICERA_COMMON_LIBADD_FLAGS)
 
 ################################################################################
 # plugin: cinterion (previously siemens)
@@ -830,7 +921,6 @@ libmm_plugin_novatel_la_SOURCES = \
 	$(NULL)
 libmm_plugin_novatel_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(NOVATEL_COMMON_COMPILER_FLAGS)
 libmm_plugin_novatel_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_novatel_la_LIBADD   = $(NOVATEL_COMMON_LIBADD_FLAGS)
 
 ################################################################################
 # plugin: altair lte
@@ -886,103 +976,17 @@ libmm_plugin_via_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
 # plugin: telit
 ################################################################################
 
-PLUGIN_TELIT_COMPILER_FLAGS = \
-	-I$(top_srcdir)/plugins/telit \
-	-I$(top_builddir)/plugins/telit \
-	$(NULL)
-
-noinst_LTLIBRARIES += libhelpers-telit.la
-
-TELIT_ENUMS_INPUTS = \
-	$(top_srcdir)/plugins/telit/mm-modem-helpers-telit.h \
-	$(NULL)
-
-TELIT_ENUMS_GENERATED = \
-	telit/mm-telit-enums-types.h \
-	telit/mm-telit-enums-types.c \
-	$(NULL)
-
-telit/mm-telit-enums-types.h: Makefile.am $(TELIT_ENUMS_INPUTS) $(top_srcdir)/build-aux/mm-enums-template.h
-	$(AM_V_GEN) \
-		$(MKDIR_P) telit; \
-		$(GLIB_MKENUMS) \
-			--fhead "#include \"mm-modem-helpers-telit.h\"\n#ifndef __MM_TELIT_ENUMS_TYPES_H__\n#define __MM_TELIT_ENUMS_TYPES_H__\n" \
-			--template $(top_srcdir)/build-aux/mm-enums-template.h \
-			--ftail "#endif /* __MM_TELIT_ENUMS_TYPES_H__ */\n" \
-			$(TELIT_ENUMS_INPUTS) > $@
-
-telit/mm-telit-enums-types.c: Makefile.am $(top_srcdir)/build-aux/mm-enums-template.c telit/mm-telit-enums-types.h
-	$(AM_V_GEN) \
-		$(MKDIR_P) telit; \
-		$(GLIB_MKENUMS) \
-			--fhead "#include \"mm-telit-enums-types.h\"" \
-			--template $(top_srcdir)/build-aux/mm-enums-template.c \
-			$(TELIT_ENUMS_INPUTS) > $@
-
-libhelpers_telit_la_SOURCES = \
-	telit/mm-modem-helpers-telit.c \
-	telit/mm-modem-helpers-telit.h \
-	$(NULL)
-
-nodist_libhelpers_telit_la_SOURCES = $(TELIT_ENUMS_GENERATED)
-
-libhelpers_telit_la_CPPFLAGS = $(PLUGIN_TELIT_COMPILER_FLAGS)
-
-BUILT_SOURCES += $(TELIT_ENUMS_GENERATED)
-CLEANFILES    += $(TELIT_ENUMS_GENERATED)
-
 pkglib_LTLIBRARIES += libmm-plugin-telit.la
 libmm_plugin_telit_la_SOURCES = \
 	telit/mm-plugin-telit.c \
 	telit/mm-plugin-telit.h \
 	$(NULL)
-libmm_plugin_telit_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(PLUGIN_TELIT_COMPILER_FLAGS)
+libmm_plugin_telit_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(TELIT_COMMON_COMPILER_FLAGS)
 libmm_plugin_telit_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_telit_la_LIBADD   = $(TELIT_COMMON_LIBADD_FLAGS)
 
 dist_udevrules_DATA += telit/77-mm-telit-port-types.rules
 
 AM_CFLAGS += -DTESTUDEVRULESDIR_TELIT=\"${srcdir}/telit\"
-
-noinst_PROGRAMS += test-modem-helpers-telit
-test_modem_helpers_telit_SOURCES = \
-	telit/tests/test-mm-modem-helpers-telit.c \
-	$(NULL)
-test_modem_helpers_telit_CPPFLAGS = \
-	$(PLUGIN_TELIT_COMPILER_FLAGS) \
-	$(TEST_COMMON_COMPILER_FLAGS) \
-	$(NULL)
-test_modem_helpers_telit_LDADD = \
-	$(TEST_COMMON_LIBADD_FLAGS) \
-	$(builddir)/libhelpers-telit.la \
-	$(top_builddir)/src/libhelpers.la \
-	$(top_builddir)/libmm-glib/libmm-glib.la \
-	$(NULL)
-
-# Common telit modem support library
-noinst_LTLIBRARIES += libmm-utils-telit.la
-libmm_utils_telit_la_SOURCES = \
-	telit/mm-common-telit.c \
-	telit/mm-common-telit.h \
-	telit/mm-shared-telit.c \
-	telit/mm-shared-telit.h \
-	telit/mm-broadband-modem-telit.c \
-	telit/mm-broadband-modem-telit.h \
-	$(NULL)
-libmm_utils_telit_la_CPPFLAGS = $(PLUGIN_TELIT_COMPILER_FLAGS)
-
-if WITH_MBIM
-libmm_utils_telit_la_SOURCES += \
-	telit/mm-broadband-modem-mbim-telit.h \
-	telit/mm-broadband-modem-mbim-telit.c \
-	$(NULL)
-endif
-
-TELIT_COMMON_COMPILER_FLAGS = $(PLUGIN_TELIT_COMPILER_FLAGS)
-TELIT_COMMON_LIBADD_FLAGS   = \
-	$(builddir)/libhelpers-telit.la \
-	$(builddir)/libmm-utils-telit.la \
-	$(NULL)
 
 ################################################################################
 # plugin: mtk
@@ -1122,16 +1126,8 @@ libmm_plugin_dell_la_CPPFLAGS = \
 	$(SIERRA_COMMON_COMPILER_FLAGS) \
 	$(TELIT_COMMON_COMPILER_FLAGS) \
 	$(XMM_COMMON_COMPILER_FLAGS) \
-	$(MBM_COMMON_COMPILER_FLAGS) \
 	$(NULL)
 libmm_plugin_dell_la_LDFLAGS = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_dell_la_LIBADD = \
-	$(NOVATEL_COMMON_LIBADD_FLAGS) \
-	$(SIERRA_COMMON_LIBADD_FLAGS) \
-	$(TELIT_COMMON_LIBADD_FLAGS) \
-	$(XMM_COMMON_LIBADD_FLAGS) \
-	$(MBM_COMMON_LIBADD_FLAGS) \
-	$(NULL)
 
 dist_udevrules_DATA += dell/77-mm-dell-port-types.rules
 
@@ -1184,7 +1180,6 @@ libmm_plugin_fibocom_la_SOURCES = \
 	$(NULL)
 libmm_plugin_fibocom_la_CPPFLAGS = $(PLUGIN_COMMON_COMPILER_FLAGS) $(XMM_COMMON_COMPILER_FLAGS)
 libmm_plugin_fibocom_la_LDFLAGS  = $(PLUGIN_COMMON_LINKER_FLAGS)
-libmm_plugin_fibocom_la_LIBADD   = $(XMM_COMMON_LIBADD_FLAGS)
 
 dist_udevrules_DATA += fibocom/77-mm-fibocom-port-types.rules
 
