@@ -24,6 +24,7 @@
 #include "ModemManager.h"
 #include "mm-log.h"
 #include "mm-iface-modem.h"
+#include "mm-iface-modem-3gpp.h"
 #include "mm-broadband-modem-sierra-xmm.h"
 #include "mm-broadband-bearer-sierra-xmm.h"
 #include "mm-shared-xmm.h"
@@ -253,6 +254,9 @@ mm_broadband_modem_sierra_xmm_new  (const gchar  *device,
                          MM_BASE_MODEM_PLUGIN,     plugin,
                          MM_BASE_MODEM_VENDOR_ID,  vendor_id,
                          MM_BASE_MODEM_PRODUCT_ID, product_id,
+                         MM_IFACE_MODEM_3GPP_CS_NETWORK_SUPPORTED, FALSE,
+                         MM_IFACE_MODEM_3GPP_PS_NETWORK_SUPPORTED, TRUE,
+                         MM_IFACE_MODEM_3GPP_EPS_NETWORK_SUPPORTED, TRUE,
                          NULL);
 }
 
