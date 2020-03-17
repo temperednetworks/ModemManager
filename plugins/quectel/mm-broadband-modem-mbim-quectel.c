@@ -111,7 +111,9 @@ signal_state_query_ready (MbimDevice *device,
 {
     MbimMessage *response;
     GError *error = NULL;
-    guint32 rssi;
+    guint32 rssi = 99;
+    guint32 ecno = 99;
+    guint32 rscp = 99;
 
     response = mbim_device_command_finish (device, res, &error);
     if (response &&
@@ -120,16 +122,24 @@ signal_state_query_ready (MbimDevice *device,
             response,
             &rssi,
             NULL, /* error_rate */
-            NULL, /* rscp */
-            NULL, /* ecno */
+            &rscp,
+            &ecno,
             NULL, /* rsrq */
             NULL, /* rsrp */
             NULL, /* rssnr */
             &error)) {
-        guint32 quality;
+        guint32 quality = 0;
 
-        /* Normalize the quality. 99 means unknown, we default it to 0 */
-        quality = CLAMP (rssi == 99 ? 0 : rssi, 0, 31) * 100 / 31;
+        if(rssi <= 31)
+        {
+           /* Normalize the quality. 99 means unknown, we default it to 0 */
+            quality = CLAMP (rssi == 99 ? 0 : rssi, 0, 31) * 100 / 31;
+        }
+        else if(rscp <= 97 && ecno <= 49)
+        {
+            float calc_rssi = -120.0 + (float) rscp + 24.0 - ((float)ecno / 2.0);
+            quality = CLAMP((guint32) ((calc_rssi + 113.0) * 100.0 / 62.0), 0, 100);
+        }
 
         g_task_return_int (task, quality);
     } else
