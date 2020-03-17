@@ -6,7 +6,7 @@ dnl
 
 m4_define([mm_major_version], [1])
 m4_define([mm_minor_version], [12])
-m4_define([mm_micro_version], [2])
+m4_define([mm_micro_version], [8])
 m4_define([mm_version],
           [mm_major_version.mm_minor_version.mm_micro_version])
 
@@ -439,6 +439,7 @@ examples/Makefile
 examples/modem-watcher-python/Makefile
 examples/modem-watcher-javascript/Makefile
 examples/sms-python/Makefile
+examples/network-scan-python/Makefile
 ])
 AC_OUTPUT
 
